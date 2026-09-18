@@ -1,6 +1,32 @@
-/* Existing admin dashboard styles plus schedule modal/output styles. */
-.modal { position:fixed; inset:0; z-index:10; display:grid; place-items:center; padding:20px; background:rgba(1,8,18,.72); backdrop-filter:blur(8px); }
-.modal.hidden { display:none; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
+
+:root { --bg:#07111f; --panel:rgba(13,31,55,.94); --blue:#36a3ff; --cyan:#39e6d0; --text:#eaf3ff; --muted:#8ea5bf; --line:rgba(146,183,218,.18); }
+* { box-sizing:border-box; font-family:'Inter',Arial,sans-serif; }
+body { min-height:100vh; margin:0; color:var(--text); background:radial-gradient(circle at 90% 0,rgba(57,230,208,.12),transparent 30rem),linear-gradient(135deg,#07111f,#0d1d34 60%,#081321); }
+body::before { position:fixed; inset:0; z-index:-1; content:''; opacity:.25; background-image:linear-gradient(rgba(125,180,235,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(125,180,235,.06) 1px,transparent 1px); background-size:42px 42px; }
+.header { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; padding:22px clamp(20px,5vw,64px); border-bottom:1px solid var(--line); background:rgba(11,27,50,.92); box-shadow:0 12px 35px rgba(0,0,0,.25); }
+.header h2 { margin:0; font:700 1.25rem 'Space Grotesk',sans-serif; }
+.header p { margin:6px 0 0; color:var(--muted); }
+.header a { color:var(--cyan) !important; text-decoration:none; font-weight:700; }
+.container { width:min(92%,1100px); margin:42px auto; }
+.dashboard-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:20px; }
+.card { padding:24px; border:1px solid var(--line); border-left:3px solid #ff6b7a; border-radius:18px; background:var(--panel); box-shadow:0 20px 50px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.04); }
+.card h3 { margin:0 0 14px; color:var(--text); font-family:'Space Grotesk',sans-serif; }
+.card p,.card li { color:var(--muted); line-height:1.7; }
+button,input,select { width:100%; min-height:44px; padding:11px 13px; margin:7px 0; color:var(--text); font:inherit; border:1px solid var(--line); border-radius:10px; background:rgba(4,13,26,.72); outline:none; transition:.2s; }
+input::placeholder { color:#7089a5; } select option { color:var(--text); background:#0b1b32; }
+button { cursor:pointer; } button:hover { border-color:var(--blue); background:rgba(54,163,255,.1); transform:translateY(-1px); }
+button.primary { color:#03101e; border:0; font-weight:800; background:linear-gradient(110deg,var(--cyan),var(--blue)); }
+button.primary:hover { color:white; }
+.admin-output { margin-top:12px; padding:12px; border:1px solid rgba(54,163,255,.25); border-radius:12px; background:rgba(54,163,255,.08); color:var(--muted); font-size:.9rem; }
+.admin-output.output-success { color:#8ff0c5; border-color:rgba(85,227,164,.3); background:rgba(85,227,164,.08); }
+.admin-output.output-error { color:#ff9aa6; border-color:rgba(255,107,122,.3); background:rgba(255,107,122,.08); }
+#activityLogs { padding:10px 14px; border:1px solid var(--line); border-radius:12px; background:rgba(4,13,26,.35); }
+#activityLogs p { margin:8px 0; }
+
+/* The schedule dialog must be hidden until Add New Schedule is clicked. */
+.hidden, #scheduleModal.hidden { display:none !important; }
+.modal { position:fixed; inset:0; z-index:1000; display:grid; place-items:center; padding:20px; background:rgba(1,8,18,.78); backdrop-filter:blur(8px); }
 .modal-content { position:relative; width:min(100%,560px); max-height:92vh; overflow:auto; padding:28px; border:1px solid var(--line); border-radius:20px; background:#0d1f37; box-shadow:0 25px 80px rgba(0,0,0,.5); }
 .modal-content h2 { margin:0 0 6px; font-family:'Space Grotesk',sans-serif; }
 .modal-subtitle { margin-top:0; color:var(--muted); }
@@ -8,4 +34,5 @@
 .form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .admin-output ul { margin:10px 0 0; padding-left:20px; }
 .admin-output li { margin:7px 0; color:inherit; }
+@media (max-width:700px) { .header { align-items:flex-start; flex-direction:column; } .container { width:94%; margin:24px auto; } }
 @media (max-width:600px) { .form-row { grid-template-columns:1fr; } }
