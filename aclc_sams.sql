@@ -31,3 +31,15 @@ CREATE TABLE users (
 
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
+
+-- Temporary admin account for local/demo access only.
+-- Login phone: 09161196693
+-- Login password: 1029384756
+INSERT INTO users (role, full_name, phone, password, status)
+VALUES (
+    'admin',
+    'Temporary Admin',
+    '09161196693',
+    '$2y$10$uTf5vw.Rv0Gh6TlNI2Gr1Or7Jf.pwJv.gg0LQr2yzUDIXp1h9wZ6m',
+    'Registered'
+);
