@@ -41,9 +41,16 @@ function showSignup() {
     const loginForm = document.getElementById("loginForm");
     const signupPanel = document.getElementById("signupPanel");
     const signupForm = document.getElementById("signupForm");
+    const roleInput = document.getElementById("roleInput");
 
     if (loginForm) loginForm.classList.add("hidden");
     if (signupPanel) signupPanel.classList.remove("hidden");
+
+    if (roleInput && !roleInput.value) {
+        selectRole("student");
+        return;
+    }
+
     if (signupForm) signupForm.classList.remove("hidden");
 }
 
