@@ -1,64 +1,367 @@
-/* ===== SAMS - COMMON DASHBOARD CSS (Beginner Friendly) ===== */
-* { box-sizing: border-box; font-family: Arial, sans-serif; }
-body { margin:0; background:#f4f6fb; color:#222; }
+/* =====================================================
+   GENERAL
+===================================================== */
 
-/* Header - ACLC College of Malolos */
+* {
+    box-sizing: border-box;
+    font-family: Arial, sans-serif;
+}
+
+body {
+    margin: 0;
+    background: #f4f6fb;
+    color: #222;
+}
+
+
+/* =====================================================
+   HEADER
+===================================================== */
+
 .header {
-  background: #0a3d8f;
-  color: white;
-  padding: 18px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.header h2 { margin:0; font-size:20px; }
-.header a { color:#ffcc00; text-decoration:none; font-weight:bold; }
+    background: #0a3d8f;
+    color: white;
 
-/* Main container */
+    padding: 18px 30px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    gap: 20px;
+
+    flex-wrap: wrap;
+}
+
+
+.header-title h2 {
+    margin: 0;
+
+    font-size: 21px;
+}
+
+
+.header-title span {
+    display: block;
+
+    margin-top: 4px;
+
+    font-size: 14px;
+
+    opacity: 0.9;
+}
+
+
+.header-user {
+    display: flex;
+
+    align-items: center;
+
+    gap: 20px;
+
+    font-size: 14px;
+}
+
+
+.header-user a {
+    color: #ffcc00;
+
+    text-decoration: none;
+
+    font-weight: bold;
+
+    padding: 8px 12px;
+
+    border: 1px solid #ffcc00;
+
+    border-radius: 6px;
+}
+
+
+.header-user a:hover {
+    background: #ffcc00;
+
+    color: #0a3d8f;
+}
+
+
+/* =====================================================
+   MAIN CONTAINER
+===================================================== */
+
 .container {
-  max-width: 1100px;
-  margin: 20px auto;
-  padding: 0 15px;
+    width: 90%;
+
+    max-width: 1100px;
+
+    margin: 30px auto;
 }
 
-/* Grid for 4 or 5 divs */
+
+.container h1 {
+    margin-bottom: 5px;
+
+    color: #0a3d8f;
+}
+
+
+.subtitle {
+    margin-top: 0;
+
+    color: #666;
+
+    margin-bottom: 25px;
+}
+
+
+/* =====================================================
+   DASHBOARD GRID
+===================================================== */
+
 .dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
+    display: grid;
+
+    grid-template-columns:
+        repeat(2, minmax(0, 1fr));
+
+    gap: 20px;
 }
 
-/* Basic Card */
+
+/* =====================================================
+   CARDS
+===================================================== */
+
 .card {
-  background: white;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  border-left: 6px solid #0a3d8f;
+    background: white;
+
+    border-radius: 14px;
+
+    padding: 20px;
+
+    box-shadow:
+        0 4px 12px rgba(0, 0, 0, 0.06);
+
+    border-left: 6px solid #0a3d8f;
 }
-.card h3 { margin-top:0; color:#0a3d8f; }
+
+
+.card:nth-child(1) {
+    border-left-color: #0a3d8f;
+}
+
+
+.card:nth-child(2) {
+    border-left-color: #00838f;
+}
+
+
+.card:nth-child(3) {
+    border-left-color: #2e7d32;
+}
+
+
+.card:nth-child(4) {
+    border-left-color: #ef6c00;
+}
+
+
+.card:nth-child(5) {
+    border-left-color: #c41e1e;
+}
+
+
+.card h3 {
+    margin-top: 0;
+
+    color: #0a3d8f;
+}
+
+
+.card p {
+    line-height: 1.5;
+}
+
+
+.card ul {
+    padding-left: 20px;
+
+    line-height: 1.8;
+}
+
+
+/* =====================================================
+   BUTTONS
+===================================================== */
+
 button {
-  width:100%; padding:10px; margin:6px 0;
-  border-radius:8px; border:1px solid #ccc;
-  cursor:pointer;
+    width: 100%;
+
+    padding: 11px;
+
+    margin-top: 10px;
+
+    border-radius: 8px;
+
+    border: 1px solid #ccc;
+
+    background: #f5f5f5;
+
+    cursor: pointer;
+
+    font-size: 14px;
 }
-button.primary { background:#0a3d8f; color:white; border:none; }
-button.primary:hover { background:#082f6e; }
-input, select { width:100%; padding:9px; border-radius:8px; border:1px solid #ccc; margin:6px 0; }
 
-/* ===== FACULTY DASHBOARD ONLY - 5 divs ===== */
-.card:nth-child(1) { border-left-color:#0a3d8f; }
-.card:nth-child(2) { border-left-color:#00838f; }
-.card:nth-child(3) { border-left-color:#2e7d32; }
-.card:nth-child(4) { border-left-color:#ef6c00; }
-.card:nth-child(5) { border-left-color:#c41e1e; grid-column: span 2; }
 
-.masterlist { background:#eef3ff; padding:10px; border-radius:8px; margin-top:10px; }
-.confirm-btn { background:#1e8c45; color:white; width:auto; padding:6px 14px; display:inline-block; margin-right:6px; }
-.reject-btn { background:#c41e1e; color:white; width:auto; padding:6px 14px; display:inline-block; }
-.live-row { border-bottom:1px solid #eee; padding:6px 0; font-size:14px; }
+button:hover {
+    background: #e5e5e5;
+}
 
-@media(max-width:700px){
-  .card:nth-child(5){ grid-column: span 1; }
+
+button.primary {
+    background: #0a3d8f;
+
+    color: white;
+
+    border: none;
+
+    font-weight: bold;
+}
+
+
+button.primary:hover {
+    background: #082f6e;
+}
+
+
+/* =====================================================
+   MASTERLIST
+===================================================== */
+
+.masterlist {
+    background: #eef3ff;
+
+    padding: 15px;
+
+    border-radius: 8px;
+
+    margin-top: 12px;
+}
+
+
+.masterlist p {
+    margin: 5px 0 12px;
+}
+
+
+.masterlist hr {
+    border: 0;
+
+    border-top: 1px solid #ccc;
+
+    margin: 10px 0;
+}
+
+
+/* =====================================================
+   ATTENDANCE
+===================================================== */
+
+.attendance-card {
+    grid-column: span 2;
+}
+
+
+.attendance-summary {
+    display: flex;
+
+    gap: 15px;
+
+    margin: 15px 0;
+}
+
+
+.attendance-summary div {
+    flex: 1;
+
+    text-align: center;
+
+    background: #f4f6fb;
+
+    padding: 15px;
+
+    border-radius: 8px;
+}
+
+
+.attendance-summary strong {
+    display: block;
+
+    font-size: 24px;
+
+    color: #0a3d8f;
+}
+
+
+.attendance-summary span {
+    display: block;
+
+    margin-top: 5px;
+
+    font-size: 13px;
+
+    color: #666;
+}
+
+
+/* =====================================================
+   HIDDEN
+===================================================== */
+
+.hidden {
+    display: none;
+}
+
+
+/* =====================================================
+   MOBILE
+===================================================== */
+
+@media (max-width: 700px) {
+
+    .header {
+        padding: 18px;
+    }
+
+
+    .header-user {
+        width: 100%;
+
+        justify-content: space-between;
+    }
+
+
+    .container {
+        width: 94%;
+
+        margin: 20px auto;
+    }
+
+
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+
+
+    .attendance-card {
+        grid-column: span 1;
+    }
+
+
+    .attendance-summary {
+        flex-direction: column;
+
+        gap: 8px;
+    }
+
 }

@@ -1,20 +1,278 @@
 <?php
+
 session_start();
-if(!isset($_SESSION['role']) || $_SESSION['role'] != 'faculty'){
-  header("Location: index.php"); exit();
+
+// ==========================================
+// FACULTY ONLY
+// ==========================================
+
+if (
+    !isset($_SESSION['role']) ||
+    $_SESSION['role'] !== 'faculty'
+) {
+    header("Location: index.php");
+    exit();
 }
+
+
+// ==========================================
+// SAFE DISPLAY OF NAME
+// ==========================================
+
+$faculty_name = htmlspecialchars(
+    $_SESSION['name'] ?? 'Faculty',
+    ENT_QUOTES,
+    'UTF-8'
+);
+
 ?>
+
 <!DOCTYPE html>
-<html><head><link rel="stylesheet" href="style.css"><title>Faculty Dashboard - SAMS</title></head>
+<html lang="en">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1.0">
+
+    <title>Faculty Dashboard - SAMS</title>
+
+    <link rel="stylesheet" href="faculty.css">
+
+</head>
+
+
 <body>
-<div class="header"><h2>ACLC College of Malolos - SAMS / Faculty</h2><p>Welcome, <?php echo $_SESSION['name']; ?> | <a href="logout.php" style="color:#ffcc00;">Logout</a></p></div>
+
+
+<!-- ==================================================
+     HEADER
+================================================== -->
+
+<div class="header">
+
+    <div class="header-title">
+
+        <h2>
+            ACLC College of Malolos - SAMS
+        </h2>
+
+        <span>
+            Faculty Dashboard
+        </span>
+
+    </div>
+
+
+    <div class="header-user">
+
+        <span>
+            Welcome,
+            <strong>
+                <?php echo $faculty_name; ?>
+            </strong>
+        </span>
+
+        <a href="logout.php">
+            Logout
+        </a>
+
+    </div>
+
+</div>
+
+
+<!-- ==================================================
+     MAIN CONTENT
+================================================== -->
+
 <div class="container">
-<div class="dashboard-grid">
-  <div class="card"><h3>📖 Subjects to Teach</h3><ul><li>BSCS 2A - Web Dev</li><li>BSIT 1B - Programming 1</li></ul></div>
-  <div class="card"><h3>🏫 Year Level & Sections to Attend</h3><p>Grade 11 - STEM A, HUMSS B</p><p>2nd Year - BSCS 2A, 2B</p></div>
-  <div class="card"><h3>📋 Masterlist</h3><p>Click to view all sections you handle</p><button class="primary" onclick="alert('Showing Masterlist: BSCS 2A (35 students), BSIT 1B (40 students)')">View Masterlist</button></div>
-  <div class="card"><h3>⭐ Advisory Class</h3><p>Advisory: BSCS 2A</p><button>View Advisory Attendance</button></div>
-  <div class="card"><h3>✅ Students Attendance Status (Per Subject)</h3><p>Web Dev Today: 28 Present, 2 Late, 5 Absent</p><button class="primary">Confirm Excused Requests</button></div>
+
+    <h1>Faculty Dashboard</h1>
+
+    <p class="subtitle">
+        Manage your subjects, sections, masterlists,
+        and student attendance.
+    </p>
+
+
+    <div class="dashboard-grid">
+
+
+        <!-- =========================================
+             SUBJECTS
+        ========================================== -->
+
+        <div class="card">
+
+            <h3>📖 Subjects to Teach</h3>
+
+            <ul>
+
+                <li>
+                    BSCS 2A - Web Development
+                </li>
+
+                <li>
+                    BSIT 1B - Programming 1
+                </li>
+
+            </ul>
+
+        </div>
+
+
+        <!-- =========================================
+             YEAR LEVEL / SECTIONS
+        ========================================== -->
+
+        <div class="card">
+
+            <h3>🏫 Year Level & Sections</h3>
+
+            <p>
+                <strong>Grade 11</strong>
+            </p>
+
+            <p>
+                STEM A<br>
+                HUMSS B
+            </p>
+
+            <p>
+                <strong>2nd Year</strong>
+            </p>
+
+            <p>
+                BSCS 2A<br>
+                BSCS 2B
+            </p>
+
+        </div>
+
+
+        <!-- =========================================
+             MASTERLIST
+        ========================================== -->
+
+        <div class="card">
+
+            <h3>📋 Masterlist</h3>
+
+            <p>
+                View the students in the sections
+                assigned to you.
+            </p>
+
+            <button
+                class="primary"
+                onclick="showMasterlist()">
+
+                View Masterlist
+
+            </button>
+
+            <div
+                id="masterlist"
+                class="masterlist hidden">
+
+                <strong>
+                    BSCS 2A
+                </strong>
+
+                <p>
+                    35 students
+                </p>
+
+                <hr>
+
+                <strong>
+                    BSIT 1B
+                </strong>
+
+                <p>
+                    40 students
+                </p>
+
+            </div>
+
+        </div>
+
+
+        <!-- =========================================
+             ADVISORY
+        ========================================== -->
+
+        <div class="card">
+
+            <h3>⭐ Advisory Class</h3>
+
+            <p>
+                <strong>Advisory:</strong>
+                BSCS 2A
+            </p>
+
+            <button
+                onclick="showAdvisory()">
+
+                View Advisory Attendance
+
+            </button>
+
+        </div>
+
+
+        <!-- =========================================
+             ATTENDANCE
+        ========================================== -->
+
+        <div class="card attendance-card">
+
+            <h3>
+                ✅ Student Attendance Status
+            </h3>
+
+            <p>
+                <strong>
+                    Web Development - Today
+                </strong>
+            </p>
+
+            <div class="attendance-summary">
+
+                <div>
+                    <strong>28</strong>
+                    <span>Present</span>
+                </div>
+
+                <div>
+                    <strong>2</strong>
+                    <span>Late</span>
+                </div>
+
+                <div>
+                    <strong>5</strong>
+                    <span>Absent</span>
+                </div>
+
+            </div>
+
+            <button class="primary">
+
+                Confirm Excused Requests
+
+            </button>
+
+        </div>
+
+    </div>
+
 </div>
-</div>
-</body></html>
+
+
+<script src="faculty.js"></script>
+
+</body>
+</html>
