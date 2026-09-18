@@ -56,7 +56,6 @@ window.addEventListener("DOMContentLoaded", () => {
             accountOutput.classList.remove("hidden", "output-error");
             accountForm.reset();
             toggleAccountFields();
-            window.location.reload();
         } catch (error) {
             showOutput(accountOutput, error.message, "error");
         }
