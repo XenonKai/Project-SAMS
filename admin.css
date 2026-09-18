@@ -1,74 +1,28 @@
-/* ===== SAMS - COMMON DASHBOARD CSS (Beginner Friendly) ===== */
-* { box-sizing: border-box; font-family: Arial, sans-serif; }
-body { margin:0; background:#f4f6fb; color:#222; }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
 
-/* Header - ACLC College of Malolos */
-.header {
-  background: #0a3d8f;
-  color: white;
-  padding: 18px 25px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-wrap: wrap;
-}
-.header h2 { margin:0; font-size:20px; }
-.header a { color:#ffcc00; text-decoration:none; font-weight:bold; }
-
-/* Main container */
-.container {
-  max-width: 1100px;
-  margin: 20px auto;
-  padding: 0 15px;
-}
-
-/* Grid for 4 or 5 divs */
-.dashboard-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-  gap: 18px;
-}
-
-/* Basic Card */
-.card {
-  background: white;
-  border-radius: 14px;
-  padding: 16px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
-  border-left: 6px solid #0a3d8f;
-}
-.card h3 { margin-top:0; color:#0a3d8f; }
-button {
-  width:100%; padding:10px; margin:6px 0;
-  border-radius:8px; border:1px solid #ccc;
-  cursor:pointer;
-}
-button.primary { background:#0a3d8f; color:white; border:none; }
-button.primary:hover { background:#082f6e; }
-input, select { width:100%; padding:9px; border-radius:8px; border:1px solid #ccc; margin:6px 0; }
-
-/* ===== ADMIN DASHBOARD ONLY ===== */
-.card.admin { border-left-color:#c41e1e; }
-.header { background: linear-gradient(90deg, #0a3d8f, #c41e1e); }
-
-.id-box {
-  background:#fff3f3;
-  border:1px dashed #c41e1e;
-  padding:10px;
-  border-radius:8px;
-  margin-top:10px;
-  max-height:200px;
-  overflow:auto;
-}
-.gen-student { background:#0a3d8f; color:white; border:none; }
-.gen-faculty { background:#c41e1e; color:white; border:none; }
-.real-time {
-  background:#0a3d8f0d;
-  border-radius:8px;
-  padding:10px;
-  font-size:13px;
-  max-height:300px;
-  overflow:auto;
-}
-.real-time p { margin:6px 0; border-left:3px solid #0a3d8f; padding-left:8px; }
-.warning { color:#c41e1e; font-weight:bold; }
+:root { --bg:#07111f; --panel:rgba(13,31,55,.84); --blue:#36a3ff; --cyan:#39e6d0; --text:#eaf3ff; --muted:#8ea5bf; --line:rgba(146,183,218,.18); }
+* { box-sizing:border-box; font-family:'Inter',Arial,sans-serif; }
+body { min-height:100vh; margin:0; color:var(--text); background:radial-gradient(circle at 10% 0,rgba(54,163,255,.16),transparent 28rem),linear-gradient(135deg,#07111f,#0d1d34 60%,#081321); }
+body::before { position:fixed; inset:0; z-index:-1; content:''; opacity:.25; background-image:linear-gradient(rgba(125,180,235,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(125,180,235,.06) 1px,transparent 1px); background-size:42px 42px; }
+.header { display:flex; justify-content:space-between; align-items:center; gap:20px; flex-wrap:wrap; padding:22px clamp(20px,5vw,64px); border-bottom:1px solid var(--line); background:rgba(11,27,50,.86); box-shadow:0 12px 35px rgba(0,0,0,.25); }
+.header h2 { margin:0; font:700 1.25rem 'Space Grotesk',sans-serif; }
+.header p { margin:6px 0 0; color:var(--muted); }
+.header a { color:var(--cyan); text-decoration:none; font-weight:700; }
+.container { width:min(92%,1100px); margin:42px auto; }
+.dashboard-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(270px,1fr)); gap:20px; }
+.card { padding:24px; border:1px solid var(--line); border-left:3px solid var(--blue); border-radius:18px; background:var(--panel); box-shadow:0 20px 50px rgba(0,0,0,.18),inset 0 1px rgba(255,255,255,.04); backdrop-filter:blur(14px); }
+.card.admin { border-left-color:#ff6b7a; }
+.card h3 { margin:0 0 14px; color:var(--text); font-family:'Space Grotesk',sans-serif; }
+.card p,.card li { color:var(--muted); line-height:1.7; }
+button,input,select { width:100%; min-height:44px; padding:11px 13px; margin:7px 0; color:var(--text); font:inherit; border:1px solid var(--line); border-radius:10px; background:rgba(4,13,26,.62); outline:none; transition:.2s; }
+input::placeholder { color:#7089a5; }
+select option { color:var(--text); background:#0b1b32; }
+button { cursor:pointer; }
+button:hover { border-color:var(--blue); background:rgba(54,163,255,.1); transform:translateY(-1px); }
+button.primary { color:#03101e; border:0; font-weight:800; background:linear-gradient(110deg,var(--cyan),var(--blue)); }
+button.primary:hover { color:white; }
+.id-box,.real-time { padding:14px; border:1px solid rgba(54,163,255,.25); border-radius:12px; background:rgba(54,163,255,.08); color:var(--muted); }
+.real-time p { margin:8px 0; padding-left:10px; border-left:2px solid var(--cyan); }
+.gen-faculty { background:linear-gradient(110deg,#ff6b7a,#d84768); color:white; border:0; }
+.warning { color:#ffb86b; font-weight:700; }
+@media (max-width:700px) { .header { align-items:flex-start; flex-direction:column; } .container { width:94%; margin:24px auto; } }
