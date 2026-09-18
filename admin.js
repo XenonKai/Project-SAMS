@@ -1,86 +1,69 @@
 function generateID(type) {
+    const nameInput = document.getElementById("idName");
+    const resultNode = document.getElementById("generatedResult");
 
-    let name = document.getElementById("idName").value.trim();
-
-    if (name == "") {
-
-        alert("Please enter a name first.");
+    if (!nameInput || !resultNode) {
+        alert("This page is missing the ID generator fields.");
         return;
-
     }
 
+    const name = nameInput.value.trim();
 
-    let formData = new FormData();
+    if (name === "") {
+        alert("Please enter a name first.");
+        return;
+    }
 
+    const formData = new FormData();
     formData.append("name", name);
     formData.append("type", type);
 
-
     fetch("generate_id.php", {
-
         method: "POST",
-        body: formData
-
+        body: formData,
+        headers: { "X-Requested-With": "XMLHttpRequest" }
     })
+        .then(async (response) => {
+            const text = await response.text();
 
-    .then(response => response.json())
+            try {
+                const data = JSON.parse(text);
 
-    .then(data => {
+                if (!response.ok || !data.success) {
+                    throw new Error(data.message || "Unable to generate ID.");
+                }
 
-        if (data.success) {
+                resultNode.innerText = "Generated ID: " + data.id;
 
-            document.getElementById("generatedResult").innerText =
-                "Generated ID: " + data.id;
-
-
-            if (data.existing) {
-
-                alert(
-                    "This person already has an ID.\n\n" +
-                    "Name: " + name + "\n" +
-                    "ID: " + data.id
-                );
-
-            } else {
-
-                alert(
-                    "ID generated successfully!\n\n" +
-                    "Name: " + name + "\n" +
-                    "ID: " + data.id
-                );
-
+                if (data.existing) {
+                    alert("This person already has an ID.\n\nName: " + name + "\nID: " + data.id);
+                } else {
+                    alert("ID generated successfully!\n\nName: " + name + "\nID: " + data.id);
+                }
+            } catch (error) {
+                console.error(error);
+                alert("Something went wrong while generating the ID.");
             }
-
-        } else {
-
-            alert(data.message);
-
-        }
-
-    })
-
-    .catch(error => {
-
-        console.log(error);
-
-        alert("Something went wrong.");
-
-    });
-
+        })
+        .catch((error) => {
+            console.error(error);
+            alert("Something went wrong.");
+        });
 }
 
+window.addEventListener("DOMContentLoaded", () => {
+    const generateStudentBtn = document.getElementById("generateStudentBtn");
+    const generateFacultyBtn = document.getElementById("generateFacultyBtn");
 
-// Student ID
-document.getElementById("generateStudentBtn").onclick = function () {
+    if (generateStudentBtn) {
+        generateStudentBtn.addEventListener("click", function () {
+            generateID("student");
+        });
+    }
 
-    generateID("student");
-
-};
-
-
-// Faculty ID
-document.getElementById("generateFacultyBtn").onclick = function () {
-
-    generateID("faculty");
-
-};
+    if (generateFacultyBtn) {
+        generateFacultyBtn.addEventListener("click", function () {
+            generateID("faculty");
+        });
+    }
+});
