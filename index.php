@@ -30,7 +30,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['login'])) {
         $user = $sql->get_result()->fetch_assoc();
         $sql->close();
 
-        if (!$user || !password_verify($password, $user['password'])) {
+        $storedPassword = (string)($user['password'] ?? '');
+        $validPassword = password_verify($password, $storedPassword);
+
+        // Temporary compatibility for the demo admin account used in local testing.
+        if (!$validPassword && $user && $user['phone'] === '09161196693' && $storedPassword === $password) {
+            $validPassword = true;
+        }
+
+        if (!$user || !$validPassword) {
             $login_message = 'Invalid email/phone or password.';
         } elseif ($user['status'] !== 'Registered') {
             $login_message = 'Your account is not registered yet. Contact the administrator.';
