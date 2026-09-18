@@ -1,11 +1,23 @@
 <?php
 session_start();
+
+// Keep API responses JSON even when PHP/MySQL reports an error.
+ini_set('display_errors', '0');
+error_reporting(E_ALL);
 header('Content-Type: application/json; charset=utf-8');
 
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
-    http_response_code(403);
-    echo json_encode(['success' => false, 'message' => 'Unauthorized access.']);
+function jsonResponse(bool $success, string $message, int $status = 200, array $extra = []): void
+{
+    http_response_code($status);
+    echo json_encode(array_merge([
+        'success' => $success,
+        'message' => $message
+    ], $extra));
     exit();
+}
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    jsonResponse(false, 'Your admin session has expired. Please log in again.', 403);
 }
 
 require 'db.php';
@@ -20,15 +32,16 @@ $room = trim($_POST['room'] ?? '');
 $faculty = trim($_POST['faculty'] ?? '');
 
 if ($subject === '' || $course === '' || $section === '' || $schedule_date === '' || $start_time === '' || $end_time === '') {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'Subject, course, section, date, start time, and end time are required.']);
-    exit();
+    jsonResponse(false, 'Subject, course, section, date, start time, and end time are required.', 400);
+}
+
+$date = DateTime::createFromFormat('Y-m-d', $schedule_date);
+if (!$date || $date->format('Y-m-d') !== $schedule_date) {
+    jsonResponse(false, 'Please enter a valid schedule date.', 400);
 }
 
 if ($end_time <= $start_time) {
-    http_response_code(400);
-    echo json_encode(['success' => false, 'message' => 'End time must be later than start time.']);
-    exit();
+    jsonResponse(false, 'End time must be later than start time.', 400);
 }
 
 $create = $conn->query(
@@ -47,20 +60,24 @@ $create = $conn->query(
 );
 
 if (!$create) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Unable to prepare the schedules table.']);
-    exit();
+    error_log('Schedule table error: ' . $conn->error);
+    jsonResponse(false, 'The schedules table could not be prepared. Check your database permissions.', 500);
 }
 
 $insert = $conn->prepare(
     'INSERT INTO schedules (subject, course, section, schedule_date, start_time, end_time, room, faculty) VALUES (?, ?, ?, ?, ?, ?, ?, ?)'
 );
+
+if (!$insert) {
+    error_log('Schedule prepare error: ' . $conn->error);
+    jsonResponse(false, 'The schedule query could not be prepared.', 500);
+}
+
 $insert->bind_param('ssssssss', $subject, $course, $section, $schedule_date, $start_time, $end_time, $room, $faculty);
 
 if (!$insert->execute()) {
-    http_response_code(500);
-    echo json_encode(['success' => false, 'message' => 'Unable to save the schedule.']);
-    exit();
+    error_log('Schedule insert error: ' . $insert->error);
+    jsonResponse(false, 'The schedule could not be saved. Check the database structure and permissions.', 500);
 }
 
-echo json_encode(['success' => true, 'message' => 'Schedule created successfully.', 'id' => $insert->insert_id]);
+jsonResponse(true, 'Schedule created successfully.', 200, ['id' => $insert->insert_id]);

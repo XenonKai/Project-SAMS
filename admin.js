@@ -5,6 +5,28 @@ function showOutput(element, message, type = "info") {
     element.textContent = message;
 }
 
+async function readJsonResponse(response) {
+    const text = await response.text();
+    let data;
+
+    try {
+        data = JSON.parse(text);
+    } catch (error) {
+        // A response beginning with <!DOCTYPE usually means a PHP/server error page
+        // or a redirect was returned instead of the API JSON response.
+        if (text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html")) {
+            throw new Error("The server returned an HTML error page instead of JSON. Check the PHP error log and make sure create_schedule.php is deployed.");
+        }
+        throw new Error(text.trim() || "The server returned an empty response.");
+    }
+
+    if (!response.ok || !data.success) {
+        throw new Error(data.message || "The request could not be completed.");
+    }
+
+    return data;
+}
+
 function formatSchedule(schedule) {
     const date = new Date(`${schedule.schedule_date}T00:00:00`);
     const formattedDate = Number.isNaN(date.getTime())
@@ -16,14 +38,11 @@ function formatSchedule(schedule) {
 async function loadSchedules() {
     const output = document.getElementById("scheduleOutput");
     if (!output) return;
-
     showOutput(output, "Loading schedules...");
 
     try {
         const response = await fetch("list_schedules.php", { headers: { "X-Requested-With": "XMLHttpRequest" } });
-        const data = await response.json();
-        if (!response.ok || !data.success) throw new Error(data.message || "Unable to load schedules.");
-
+        const data = await readJsonResponse(response);
         output.innerHTML = "";
         output.classList.remove("hidden", "output-error");
         output.classList.add("output-success");
@@ -36,7 +55,6 @@ async function loadSchedules() {
         const title = document.createElement("strong");
         title.textContent = "Saved schedules";
         output.appendChild(title);
-
         const list = document.createElement("ul");
         data.schedules.forEach((schedule) => {
             const item = document.createElement("li");
@@ -53,8 +71,8 @@ function generateID(type) {
     const nameInput = document.getElementById("idName");
     const resultNode = document.getElementById("generatedResult");
     if (!nameInput || !resultNode) return;
-
     const name = nameInput.value.trim();
+
     if (!name) {
         showOutput(resultNode, "Please enter a name first.", "error");
         nameInput.focus();
@@ -67,9 +85,8 @@ function generateID(type) {
     formData.append("type", type);
 
     fetch("generate_id.php", { method: "POST", body: formData, headers: { "X-Requested-With": "XMLHttpRequest" } })
-        .then(async (response) => {
-            const data = await response.json();
-            if (!response.ok || !data.success) throw new Error(data.message || "Unable to generate ID.");
+        .then(readJsonResponse)
+        .then((data) => {
             const label = type === "student" ? "Student" : "Faculty";
             showOutput(resultNode, data.existing ? `${label} ID already exists: ${data.id}` : `${label} ID generated successfully: ${data.id}`);
         })
@@ -86,7 +103,6 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("addScheduleBtn")?.addEventListener("click", () => scheduleModal?.classList.remove("hidden"));
     document.getElementById("viewSchedulesBtn")?.addEventListener("click", loadSchedules);
     document.getElementById("closeScheduleBtn")?.addEventListener("click", () => scheduleModal?.classList.add("hidden"));
-
     scheduleModal?.addEventListener("click", (event) => {
         if (event.target === scheduleModal) scheduleModal.classList.add("hidden");
     });
@@ -96,13 +112,17 @@ window.addEventListener("DOMContentLoaded", () => {
         showOutput(scheduleFormOutput, "Saving schedule...");
 
         try {
-            const response = await fetch("create_schedule.php", { method: "POST", body: new FormData(scheduleForm), headers: { "X-Requested-With": "XMLHttpRequest" } });
-            const data = await response.json();
-            if (!response.ok || !data.success) throw new Error(data.message || "Unable to save schedule.");
+            const response = await fetch("create_schedule.php", {
+                method: "POST",
+                body: new FormData(scheduleForm),
+                headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
+            });
+            const data = await readJsonResponse(response);
             showOutput(scheduleFormOutput, data.message);
             scheduleForm.reset();
             await loadSchedules();
         } catch (error) {
+            console.error("Schedule creation failed:", error);
             showOutput(scheduleFormOutput, error.message, "error");
         }
     });
