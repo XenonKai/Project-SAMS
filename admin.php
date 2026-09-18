@@ -69,6 +69,28 @@ $admin_name = htmlspecialchars($_SESSION['name'] ?? 'Admin', ENT_QUOTES, 'UTF-8'
     </div>
   </div>
 
+  <div id="scheduleModal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="scheduleModalTitle">
+    <div class="modal-content">
+      <button type="button" class="modal-close" id="closeScheduleBtn" aria-label="Close">×</button>
+      <h2 id="scheduleModalTitle">Create New Schedule</h2>
+      <p class="modal-subtitle">Add a class schedule that will appear in the schedule list.</p>
+      <form id="scheduleForm">
+        <input name="subject" placeholder="Subject name" required>
+        <input name="course" placeholder="Course / program" required>
+        <input name="section" placeholder="Section" required>
+        <input name="schedule_date" type="date" required>
+        <div class="form-row">
+          <input name="start_time" type="time" required>
+          <input name="end_time" type="time" required>
+        </div>
+        <input name="room" placeholder="Room (optional)">
+        <input name="faculty" placeholder="Faculty (optional)">
+        <button class="primary" type="submit">Save Schedule</button>
+        <div id="scheduleFormOutput" class="admin-output hidden" aria-live="polite"></div>
+      </form>
+    </div>
+  </div>
+
   <script src="admin.js"></script>
 </body>
 </html>
