@@ -1,18 +1,25 @@
+function showOutput(element, message, type = "info") {
+    if (!element) return;
+    element.classList.remove("hidden", "output-success", "output-error");
+    element.classList.add(type === "error" ? "output-error" : "output-success");
+    element.textContent = message;
+}
+
 function generateID(type) {
     const nameInput = document.getElementById("idName");
     const resultNode = document.getElementById("generatedResult");
 
-    if (!nameInput || !resultNode) {
-        alert("This page is missing the ID generator fields.");
-        return;
-    }
+    if (!nameInput || !resultNode) return;
 
     const name = nameInput.value.trim();
-
     if (name === "") {
-        alert("Please enter a name first.");
+        showOutput(resultNode, "Please enter a name first.", "error");
+        nameInput.focus();
         return;
     }
+
+    resultNode.textContent = "Generating ID...";
+    resultNode.classList.remove("output-success", "output-error");
 
     const formData = new FormData();
     formData.append("name", name);
@@ -25,45 +32,77 @@ function generateID(type) {
     })
         .then(async (response) => {
             const text = await response.text();
+            let data;
 
             try {
-                const data = JSON.parse(text);
-
-                if (!response.ok || !data.success) {
-                    throw new Error(data.message || "Unable to generate ID.");
-                }
-
-                resultNode.innerText = "Generated ID: " + data.id;
-
-                if (data.existing) {
-                    alert("This person already has an ID.\n\nName: " + name + "\nID: " + data.id);
-                } else {
-                    alert("ID generated successfully!\n\nName: " + name + "\nID: " + data.id);
-                }
+                data = JSON.parse(text);
             } catch (error) {
-                console.error(error);
-                alert("Something went wrong while generating the ID.");
+                throw new Error("The server returned an invalid response. Check the PHP/database setup.");
             }
+
+            if (!response.ok || !data.success) {
+                throw new Error(data.message || "Unable to generate ID.");
+            }
+
+            const label = type === "student" ? "Student" : "Faculty";
+            showOutput(
+                resultNode,
+                data.existing
+                    ? `${label} ID already exists: ${data.id}`
+                    : `${label} ID generated successfully: ${data.id}`
+            );
         })
         .catch((error) => {
-            console.error(error);
-            alert("Something went wrong.");
+            console.error("ID generation failed:", error);
+            showOutput(resultNode, error.message, "error");
         });
 }
 
 window.addEventListener("DOMContentLoaded", () => {
     const generateStudentBtn = document.getElementById("generateStudentBtn");
     const generateFacultyBtn = document.getElementById("generateFacultyBtn");
+    const addScheduleBtn = document.getElementById("addScheduleBtn");
+    const viewSchedulesBtn = document.getElementById("viewSchedulesBtn");
+    const assignFacultyBtn = document.getElementById("assignFacultyBtn");
+    const viewLogsBtn = document.getElementById("viewLogsBtn");
 
-    if (generateStudentBtn) {
-        generateStudentBtn.addEventListener("click", function () {
-            generateID("student");
-        });
-    }
+    generateStudentBtn?.addEventListener("click", () => generateID("student"));
+    generateFacultyBtn?.addEventListener("click", () => generateID("faculty"));
 
-    if (generateFacultyBtn) {
-        generateFacultyBtn.addEventListener("click", function () {
-            generateID("faculty");
-        });
-    }
+    addScheduleBtn?.addEventListener("click", () => {
+        showOutput(
+            document.getElementById("scheduleOutput"),
+            "Schedule form is ready. Connect this action to your schedule table/backend to save a new schedule."
+        );
+    });
+
+    viewSchedulesBtn?.addEventListener("click", () => {
+        showOutput(
+            document.getElementById("scheduleOutput"),
+            "No saved schedules are available yet. Add a schedule to display it here."
+        );
+    });
+
+    assignFacultyBtn?.addEventListener("click", () => {
+        const facultySelect = document.getElementById("facultySelect");
+        const selectedFaculty = facultySelect?.value;
+
+        showOutput(
+            document.getElementById("facultyOutput"),
+            selectedFaculty
+                ? `${selectedFaculty} selected for assignment. Connect this action to your assignment table/backend to save it.`
+                : "Please select a faculty member first.",
+            selectedFaculty ? "info" : "error"
+        );
+    });
+
+    viewLogsBtn?.addEventListener("click", () => {
+        const logs = document.getElementById("activityLogs");
+        const output = document.getElementById("logsOutput");
+
+        if (!logs || !output) return;
+        output.innerHTML = logs.innerHTML;
+        output.classList.remove("hidden", "output-error");
+        output.classList.add("output-success");
+    });
 });
