@@ -1,0 +1,3 @@
+-- Existing users table supports administrator-created accounts.
+-- No new columns are required for this change.
+-- Existing users with status 'Pending' remain blocked until handled by an administrator.

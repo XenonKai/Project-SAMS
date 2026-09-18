@@ -5,139 +5,63 @@ function showOutput(element, message, type = "info") {
     element.textContent = message;
 }
 
-async function readJsonResponse(response) {
+async function jsonRequest(url, options) {
+    const response = await fetch(url, options);
     const text = await response.text();
     let data;
-
-    try {
-        data = JSON.parse(text);
-    } catch (error) {
-        // A response beginning with <!DOCTYPE usually means a PHP/server error page
-        // or a redirect was returned instead of the API JSON response.
-        if (text.trim().startsWith("<!DOCTYPE") || text.trim().startsWith("<html")) {
-            throw new Error("The server returned an HTML error page instead of JSON. Check the PHP error log and make sure create_schedule.php is deployed.");
-        }
-        throw new Error(text.trim() || "The server returned an empty response.");
-    }
-
-    if (!response.ok || !data.success) {
-        throw new Error(data.message || "The request could not be completed.");
-    }
-
+    try { data = JSON.parse(text); } catch { throw new Error("The server returned an HTML/error page instead of JSON."); }
+    if (!response.ok || !data.success) throw new Error(data.message || "Request failed.");
     return data;
 }
 
-function formatSchedule(schedule) {
-    const date = new Date(`${schedule.schedule_date}T00:00:00`);
-    const formattedDate = Number.isNaN(date.getTime())
-        ? schedule.schedule_date
-        : date.toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" });
-    return `${formattedDate} • ${schedule.start_time.slice(0, 5)}-${schedule.end_time.slice(0, 5)} • ${schedule.subject} • ${schedule.course} ${schedule.section}${schedule.room ? ` • Room ${schedule.room}` : ""}${schedule.faculty ? ` • ${schedule.faculty}` : ""}`;
+function formatSchedule(s) {
+    return `${s.schedule_date} • ${s.start_time.slice(0, 5)}-${s.end_time.slice(0, 5)} • ${s.subject} • ${s.course} ${s.section}${s.room ? ` • Room ${s.room}` : ""}${s.faculty ? ` • ${s.faculty}` : ""}`;
 }
 
 async function loadSchedules() {
     const output = document.getElementById("scheduleOutput");
-    if (!output) return;
     showOutput(output, "Loading schedules...");
-
     try {
-        const response = await fetch("list_schedules.php", { headers: { "X-Requested-With": "XMLHttpRequest" } });
-        const data = await readJsonResponse(response);
-        output.innerHTML = "";
-        output.classList.remove("hidden", "output-error");
-        output.classList.add("output-success");
-
-        if (!data.schedules.length) {
-            output.textContent = "No saved schedules yet.";
-            return;
-        }
-
-        const title = document.createElement("strong");
-        title.textContent = "Saved schedules";
-        output.appendChild(title);
-        const list = document.createElement("ul");
-        data.schedules.forEach((schedule) => {
-            const item = document.createElement("li");
-            item.textContent = formatSchedule(schedule);
-            list.appendChild(item);
-        });
-        output.appendChild(list);
-    } catch (error) {
-        showOutput(output, error.message, "error");
-    }
+        const data = await jsonRequest("list_schedules.php", { headers: { "X-Requested-With": "XMLHttpRequest" } });
+        output.innerHTML = data.schedules.length ? `<strong>Saved schedules</strong><ul>${data.schedules.map(s => `<li>${formatSchedule(s)}</li>`).join("")}</ul>` : "No saved schedules yet.";
+        output.classList.remove("hidden");
+    } catch (e) { showOutput(output, e.message, "error"); }
 }
 
-function generateID(type) {
-    const nameInput = document.getElementById("idName");
-    const resultNode = document.getElementById("generatedResult");
-    if (!nameInput || !resultNode) return;
-    const name = nameInput.value.trim();
-
-    if (!name) {
-        showOutput(resultNode, "Please enter a name first.", "error");
-        nameInput.focus();
-        return;
-    }
-
-    showOutput(resultNode, "Generating ID...");
-    const formData = new FormData();
-    formData.append("name", name);
-    formData.append("type", type);
-
-    fetch("generate_id.php", { method: "POST", body: formData, headers: { "X-Requested-With": "XMLHttpRequest" } })
-        .then(readJsonResponse)
-        .then((data) => {
-            const label = type === "student" ? "Student" : "Faculty";
-            showOutput(resultNode, data.existing ? `${label} ID already exists: ${data.id}` : `${label} ID generated successfully: ${data.id}`);
-        })
-        .catch((error) => showOutput(resultNode, error.message, "error"));
+function toggleAccountFields() {
+    const role = document.getElementById("accountRole")?.value;
+    document.getElementById("studentAccountFields")?.classList.toggle("hidden", role !== "student");
+    document.getElementById("facultyAccountFields")?.classList.toggle("hidden", role !== "faculty");
 }
 
 window.addEventListener("DOMContentLoaded", () => {
-    const scheduleModal = document.getElementById("scheduleModal");
+    const modal = document.getElementById("scheduleModal");
     const scheduleForm = document.getElementById("scheduleForm");
     const scheduleFormOutput = document.getElementById("scheduleFormOutput");
+    const accountForm = document.getElementById("createUserForm");
+    const accountOutput = document.getElementById("accountOutput");
 
-    document.getElementById("generateStudentBtn")?.addEventListener("click", () => generateID("student"));
-    document.getElementById("generateFacultyBtn")?.addEventListener("click", () => generateID("faculty"));
-    document.getElementById("addScheduleBtn")?.addEventListener("click", () => scheduleModal?.classList.remove("hidden"));
-    document.getElementById("viewSchedulesBtn")?.addEventListener("click", loadSchedules);
-    document.getElementById("closeScheduleBtn")?.addEventListener("click", () => scheduleModal?.classList.add("hidden"));
-    scheduleModal?.addEventListener("click", (event) => {
-        if (event.target === scheduleModal) scheduleModal.classList.add("hidden");
-    });
-
-    scheduleForm?.addEventListener("submit", async (event) => {
+    document.getElementById("accountRole")?.addEventListener("change", toggleAccountFields);
+    accountForm?.addEventListener("submit", async (event) => {
         event.preventDefault();
-        showOutput(scheduleFormOutput, "Saving schedule...");
-
+        showOutput(accountOutput, "Creating account and generating password...");
         try {
-            const response = await fetch("create_schedule.php", {
-                method: "POST",
-                body: new FormData(scheduleForm),
-                headers: { "X-Requested-With": "XMLHttpRequest", "Accept": "application/json" }
-            });
-            const data = await readJsonResponse(response);
-            showOutput(scheduleFormOutput, data.message);
-            scheduleForm.reset();
-            await loadSchedules();
-        } catch (error) {
-            console.error("Schedule creation failed:", error);
-            showOutput(scheduleFormOutput, error.message, "error");
-        }
+            const data = await jsonRequest("create_user.php", { method: "POST", body: new FormData(accountForm), headers: { "Accept": "application/json" } });
+            accountOutput.innerHTML = `<strong>Save these credentials now</strong><br>Account ID: ${data.account_id}<br>Email: ${data.email}<br>Temporary password: <b>${data.password}</b><br><small>This password is shown only once.</small>`;
+            accountOutput.classList.remove("hidden", "output-error");
+            accountForm.reset();
+            toggleAccountFields();
+        } catch (e) { showOutput(accountOutput, e.message, "error"); }
     });
 
-    document.getElementById("assignFacultyBtn")?.addEventListener("click", () => {
-        const selected = document.getElementById("facultySelect")?.value;
-        showOutput(document.getElementById("facultyOutput"), selected ? `${selected} selected for assignment.` : "Please select a faculty member first.", selected ? "info" : "error");
+    document.getElementById("addScheduleBtn")?.addEventListener("click", () => modal?.classList.remove("hidden"));
+    document.getElementById("viewSchedulesBtn")?.addEventListener("click", loadSchedules);
+    document.getElementById("closeScheduleBtn")?.addEventListener("click", () => modal?.classList.add("hidden"));
+    modal?.addEventListener("click", e => { if (e.target === modal) modal.classList.add("hidden"); });
+    scheduleForm?.addEventListener("submit", async e => {
+        e.preventDefault(); showOutput(scheduleFormOutput, "Saving schedule...");
+        try { const data = await jsonRequest("create_schedule.php", { method: "POST", body: new FormData(scheduleForm), headers: { "Accept": "application/json" } }); showOutput(scheduleFormOutput, data.message); scheduleForm.reset(); await loadSchedules(); }
+        catch (error) { showOutput(scheduleFormOutput, error.message, "error"); }
     });
-
-    document.getElementById("viewLogsBtn")?.addEventListener("click", () => {
-        const logs = document.getElementById("activityLogs");
-        const output = document.getElementById("logsOutput");
-        if (!logs || !output) return;
-        output.innerHTML = logs.innerHTML;
-        output.classList.remove("hidden", "output-error");
-        output.classList.add("output-success");
-    });
+    document.getElementById("viewLogsBtn")?.addEventListener("click", () => { const logs = document.getElementById("activityLogs"), output = document.getElementById("logsOutput"); if (logs && output) { output.innerHTML = logs.innerHTML; output.classList.remove("hidden"); } });
 });
