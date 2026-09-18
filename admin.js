@@ -14,8 +14,9 @@ async function jsonRequest(url, options) {
     return data;
 }
 
-function formatSchedule(s) {
-    return `${s.schedule_date} • ${s.start_time.slice(0, 5)}-${s.end_time.slice(0, 5)} • ${s.subject} • ${s.course} ${s.section}${s.room ? ` • Room ${s.room}` : ""}${s.faculty ? ` • ${s.faculty}` : ""}`;
+function formatSchedule(schedule) {
+    const faculty = schedule.faculty ? ` • Faculty: ${schedule.faculty}` : " • Faculty: Unassigned";
+    return `${schedule.schedule_date} • ${schedule.start_time.slice(0, 5)}-${schedule.end_time.slice(0, 5)} • ${schedule.subject} • ${schedule.course} ${schedule.section}${faculty}${schedule.room ? ` • Room ${schedule.room}` : ""}`;
 }
 
 async function loadSchedules() {
@@ -23,9 +24,13 @@ async function loadSchedules() {
     showOutput(output, "Loading schedules...");
     try {
         const data = await jsonRequest("list_schedules.php", { headers: { "X-Requested-With": "XMLHttpRequest" } });
-        output.innerHTML = data.schedules.length ? `<strong>Saved schedules</strong><ul>${data.schedules.map(s => `<li>${formatSchedule(s)}</li>`).join("")}</ul>` : "No saved schedules yet.";
+        output.innerHTML = data.schedules.length
+            ? `<strong>Saved schedules</strong><ul>${data.schedules.map(schedule => `<li>${formatSchedule(schedule)}</li>`).join("")}</ul>`
+            : "No saved schedules yet.";
         output.classList.remove("hidden");
-    } catch (e) { showOutput(output, e.message, "error"); }
+    } catch (error) {
+        showOutput(output, error.message, "error");
+    }
 }
 
 function toggleAccountFields() {
@@ -42,7 +47,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const accountOutput = document.getElementById("accountOutput");
 
     document.getElementById("accountRole")?.addEventListener("change", toggleAccountFields);
-    accountForm?.addEventListener("submit", async (event) => {
+    accountForm?.addEventListener("submit", async event => {
         event.preventDefault();
         showOutput(accountOutput, "Creating account and generating password...");
         try {
@@ -51,17 +56,36 @@ window.addEventListener("DOMContentLoaded", () => {
             accountOutput.classList.remove("hidden", "output-error");
             accountForm.reset();
             toggleAccountFields();
-        } catch (e) { showOutput(accountOutput, e.message, "error"); }
+            window.location.reload();
+        } catch (error) {
+            showOutput(accountOutput, error.message, "error");
+        }
     });
 
     document.getElementById("addScheduleBtn")?.addEventListener("click", () => modal?.classList.remove("hidden"));
     document.getElementById("viewSchedulesBtn")?.addEventListener("click", loadSchedules);
     document.getElementById("closeScheduleBtn")?.addEventListener("click", () => modal?.classList.add("hidden"));
-    modal?.addEventListener("click", e => { if (e.target === modal) modal.classList.add("hidden"); });
-    scheduleForm?.addEventListener("submit", async e => {
-        e.preventDefault(); showOutput(scheduleFormOutput, "Saving schedule...");
-        try { const data = await jsonRequest("create_schedule.php", { method: "POST", body: new FormData(scheduleForm), headers: { "Accept": "application/json" } }); showOutput(scheduleFormOutput, data.message); scheduleForm.reset(); await loadSchedules(); }
-        catch (error) { showOutput(scheduleFormOutput, error.message, "error"); }
+    modal?.addEventListener("click", event => { if (event.target === modal) modal.classList.add("hidden"); });
+
+    scheduleForm?.addEventListener("submit", async event => {
+        event.preventDefault();
+        showOutput(scheduleFormOutput, "Saving schedule...");
+        try {
+            const data = await jsonRequest("create_schedule.php", { method: "POST", body: new FormData(scheduleForm), headers: { "Accept": "application/json" } });
+            showOutput(scheduleFormOutput, `${data.message} Faculty assigned successfully.`);
+            scheduleForm.reset();
+            await loadSchedules();
+        } catch (error) {
+            showOutput(scheduleFormOutput, error.message, "error");
+        }
     });
-    document.getElementById("viewLogsBtn")?.addEventListener("click", () => { const logs = document.getElementById("activityLogs"), output = document.getElementById("logsOutput"); if (logs && output) { output.innerHTML = logs.innerHTML; output.classList.remove("hidden"); } });
+
+    document.getElementById("viewLogsBtn")?.addEventListener("click", () => {
+        const logs = document.getElementById("activityLogs");
+        const output = document.getElementById("logsOutput");
+        if (logs && output) {
+            output.innerHTML = logs.innerHTML;
+            output.classList.remove("hidden");
+        }
+    });
 });
