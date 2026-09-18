@@ -2,12 +2,11 @@
 session_start();
 require 'db.php';
 
-if (!empty($_SESSION['role'])) {
-    $destinations = ['admin' => 'admin.php', 'student' => 'student.php', 'faculty' => 'faculty.php'];
-    if (isset($destinations[$_SESSION['role']])) {
-        header('Location: ' . $destinations[$_SESSION['role']]);
-        exit();
-    }
+$destinations = ['admin' => 'admin.php', 'student' => 'student.php', 'faculty' => 'faculty.php'];
+
+if (!empty($_SESSION['role']) && isset($destinations[$_SESSION['role']])) {
+    header('Location: ' . $destinations[$_SESSION['role']]);
+    exit();
 }
 
 if (empty($_SESSION['csrf_token'])) {
