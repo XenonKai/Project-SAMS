@@ -45,24 +45,24 @@ if ($faculty_result) {
           <input name="email" type="email" placeholder="Email address" required>
           <input name="phone" placeholder="Phone number" required>
           <div id="studentAccountFields" class="hidden">
-            <select name="year_level">
+            <select name="year_level" id="yearLevelSelect">
               <option value="">Grade / Year level</option>
               <option>Grade 11</option><option>Grade 12</option><option>1st Year</option>
               <option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
             </select>
-            <select name="course" aria-label="Strand or course">
+            <select name="course" id="courseSelect" aria-label="Strand or course">
               <option value="">Select strand / course</option>
               <optgroup label="Senior High School Strands">
-                <option>STEM</option>
-                <option>HUMSS</option>
-                <option>ABM</option>
-                <option>GAS</option>
+                <option value="STEM" data-level="shs">STEM</option>
+                <option value="HUMSS" data-level="shs">HUMSS</option>
+                <option value="ABM" data-level="shs">ABM</option>
+                <option value="GAS" data-level="shs">GAS</option>
               </optgroup>
               <optgroup label="College Programs">
-                <option>BSCS</option>
-                <option>BSIT</option>
-                <option>BSHM</option>
-                <option>BSBA</option>
+                <option value="BSCS" data-level="college">BSCS</option>
+                <option value="BSIT" data-level="college">BSIT</option>
+                <option value="BSHM" data-level="college">BSHM</option>
+                <option value="BSBA" data-level="college">BSBA</option>
               </optgroup>
             </select>
           </div>
