@@ -57,12 +57,15 @@ if ($faculty_result) {
                 <option value="HUMSS" data-level="shs">HUMSS</option>
                 <option value="ABM" data-level="shs">ABM</option>
                 <option value="GAS" data-level="shs">GAS</option>
+                <option value="ICT-Programming" data-level="shs">ICT-Programming</option>
+                <option value="ICT-CSS" data-level="shs">ICT-CSS</option>
+                <option value="ICT-Animation" data-level="shs">ICT-Animation</option>
               </optgroup>
               <optgroup label="College Programs">
                 <option value="BSCS" data-level="college">BSCS</option>
-                <option value="BSIT" data-level="college">BSIT</option>
-                <option value="BSHM" data-level="college">BSHM</option>
-                <option value="BSBA" data-level="college">BSBA</option>
+                <option value="BSEN" data-level="college">BSEN</option>
+                <option value="BSAIS" data-level="college">BSAIS</option>
+                <option value="ACT" data-level="college">ACT</option>
               </optgroup>
             </select>
           </div>
