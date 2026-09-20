@@ -50,7 +50,21 @@ if ($faculty_result) {
               <option>Grade 11</option><option>Grade 12</option><option>1st Year</option>
               <option>2nd Year</option><option>3rd Year</option><option>4th Year</option>
             </select>
-            <input name="course" placeholder="Strand / Course">
+            <select name="course" aria-label="Strand or course">
+              <option value="">Select strand / course</option>
+              <optgroup label="Senior High School Strands">
+                <option>STEM</option>
+                <option>HUMSS</option>
+                <option>ABM</option>
+                <option>GAS</option>
+              </optgroup>
+              <optgroup label="College Programs">
+                <option>BSCS</option>
+                <option>BSIT</option>
+                <option>BSHM</option>
+                <option>BSBA</option>
+              </optgroup>
+            </select>
           </div>
           <div id="facultyAccountFields" class="hidden"><input name="department" placeholder="Department"></div>
           <button class="primary" type="submit">Create Account &amp; Generate Password</button>
