@@ -22,11 +22,19 @@ $course = trim($_POST['course'] ?? '');
 $year_level = trim($_POST['year_level'] ?? '');
 $department = trim($_POST['department'] ?? '');
 
+$shs_year_levels = ['Grade 11', 'Grade 12'];
+$college_year_levels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
+$shs_strands = ['STEM', 'HUMSS', 'ABM', 'GAS'];
+$college_courses = ['BSCS', 'BSIT', 'BSHM', 'BSBA'];
+
 if (!in_array($role, ['student', 'faculty'], true)) respond(false, 'Choose Student or Faculty.', 400);
 if (strlen($full_name) < 2) respond(false, 'Enter the complete name.', 400);
 if (!filter_var($email, FILTER_VALIDATE_EMAIL)) respond(false, 'Enter a valid email address.', 400);
 if ($phone === '') respond(false, 'Enter a phone number.', 400);
 if ($role === 'student' && ($course === '' || $year_level === '')) respond(false, 'Course and grade/year level are required for students.', 400);
+if ($role === 'student' && !in_array($year_level, array_merge($shs_year_levels, $college_year_levels), true)) respond(false, 'Choose a valid grade/year level.', 400);
+if ($role === 'student' && in_array($year_level, $shs_year_levels, true) && !in_array($course, $shs_strands, true)) respond(false, 'Grade 11 and Grade 12 students must use an SHS strand.', 400);
+if ($role === 'student' && in_array($year_level, $college_year_levels, true) && !in_array($course, $college_courses, true)) respond(false, 'College students must use a college course.', 400);
 if ($role === 'faculty' && $department === '') respond(false, 'Department is required for faculty.', 400);
 
 $check = $conn->prepare('SELECT id FROM users WHERE email = ? OR phone = ? LIMIT 1');
