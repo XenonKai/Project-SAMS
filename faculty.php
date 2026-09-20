@@ -15,7 +15,7 @@ $faculty_name = htmlspecialchars($_SESSION['name'] ?? 'Faculty', ENT_QUOTES, 'UT
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Faculty Dashboard - SAMS</title>
-    <link rel="stylesheet" href="faculty.css">
+    <link rel="stylesheet" href="faculty.css?v=2">
 </head>
 <body>
     <div class="header">
@@ -44,7 +44,7 @@ $faculty_name = htmlspecialchars($_SESSION['name'] ?? 'Faculty', ENT_QUOTES, 'UT
             </div>
 
             <div class="card">
-                <h3>🏫 Year Level & Sections</h3>
+                <h3>🏫 Year Level &amp; Sections</h3>
                 <p><strong>Grade 11</strong></p>
                 <p>STEM A<br>HUMSS B</p>
                 <p><strong>2nd Year</strong></p>
