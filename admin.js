@@ -33,10 +33,35 @@ async function loadSchedules() {
     }
 }
 
+function updateCourseOptions() {
+    const yearLevel = document.getElementById("yearLevelSelect")?.value;
+    const courseSelect = document.getElementById("courseSelect");
+    if (!courseSelect) return;
+
+    const selectedLevel = yearLevel === "Grade 11" || yearLevel === "Grade 12" ? "shs"
+        : ["1st Year", "2nd Year", "3rd Year", "4th Year"].includes(yearLevel) ? "college"
+        : "";
+
+    Array.from(courseSelect.options).forEach(option => {
+        if (!option.dataset.level) {
+            option.hidden = false;
+            return;
+        }
+        option.hidden = selectedLevel !== "" && option.dataset.level !== selectedLevel;
+    });
+
+    const selectedOption = courseSelect.selectedOptions[0];
+    if (selectedOption?.dataset.level && selectedOption.dataset.level !== selectedLevel) {
+        courseSelect.value = "";
+    }
+    courseSelect.required = Boolean(selectedLevel);
+}
+
 function toggleAccountFields() {
     const role = document.getElementById("accountRole")?.value;
     document.getElementById("studentAccountFields")?.classList.toggle("hidden", role !== "student");
     document.getElementById("facultyAccountFields")?.classList.toggle("hidden", role !== "faculty");
+    updateCourseOptions();
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -47,6 +72,9 @@ window.addEventListener("DOMContentLoaded", () => {
     const accountOutput = document.getElementById("accountOutput");
 
     document.getElementById("accountRole")?.addEventListener("change", toggleAccountFields);
+    document.getElementById("yearLevelSelect")?.addEventListener("change", updateCourseOptions);
+    updateCourseOptions();
+
     accountForm?.addEventListener("submit", async event => {
         event.preventDefault();
         showOutput(accountOutput, "Creating account and generating password...");
