@@ -120,6 +120,6 @@ if ($faculty_result) {
       </form>
     </div>
   </div>
-  <script src="admin.js?v=5"></script>
+  <script src="admin.js?v=6"></script>
 </body>
 </html>
