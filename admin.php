@@ -9,7 +9,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 
 $admin_name = htmlspecialchars($_SESSION['name'] ?? 'Admin', ENT_QUOTES, 'UTF-8');
 $faculty_members = [];
-$faculty_result = $conn->query("SELECT id, full_name, faculty_id, faculty_profession FROM users WHERE role = 'faculty' AND status = 'Registered' ORDER BY full_name ASC");
+$faculty_result = $conn->query("SELECT id, full_name, faculty_id, faculty_profession, faculty_expertise FROM users WHERE role = 'faculty' AND status = 'Registered' ORDER BY full_name ASC");
 if ($faculty_result) {
     while ($faculty = $faculty_result->fetch_assoc()) {
         $faculty_members[] = $faculty;
@@ -70,6 +70,20 @@ if ($faculty_result) {
             </select>
           </div>
           <div id="facultyAccountFields" class="hidden">
+            <select name="faculty_expertise" id="facultyExpertiseSelect" required>
+              <option value="">Select field of expertise</option>
+              <option value="Science, Technology, Engineering, and Mathematics (STEM)">Science, Technology, Engineering, and Mathematics (STEM)</option>
+              <option value="Humanities & Arts">Humanities &amp; Arts</option>
+              <option value="Social & Behavioral Sciences">Social &amp; Behavioral Sciences</option>
+              <option value="Law, Public Safety, & Governance">Law, Public Safety, &amp; Governance</option>
+              <option value="Business & Management">Business &amp; Management</option>
+              <option value="Health & Medical Sciences">Health &amp; Medical Sciences</option>
+              <option value="Information Technology (IT) Services">Information Technology (IT) Services</option>
+              <option value="Campus Safety & Security">Campus Safety &amp; Security</option>
+              <option value="Student Affairs & Auxiliary Services">Student Affairs &amp; Auxiliary Services</option>
+              <option value="Finance & Corporate Administration">Finance &amp; Corporate Administration</option>
+              <option value="Facilities & Estates Management">Facilities &amp; Estates Management</option>
+            </select>
             <select name="faculty_profession" id="facultyProfessionSelect" required>
               <option value="">Select profession</option>
               <option value="Master Teacher">Master Teacher</option>
@@ -131,6 +145,6 @@ if ($faculty_result) {
       </form>
     </div>
   </div>
-  <script src="admin.js?v=9"></script>
+  <script src="admin.js?v=10"></script>
 </body>
 </html>
