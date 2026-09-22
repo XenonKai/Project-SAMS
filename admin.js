@@ -37,24 +37,41 @@ function updateCourseOptions() {
     const yearLevel = document.getElementById("yearLevelSelect")?.value;
     const courseSelect = document.getElementById("courseSelect");
     if (!courseSelect) return;
-
     const selectedLevel = yearLevel === "Grade 11" || yearLevel === "Grade 12" ? "shs"
-        : ["1st Year", "2nd Year", "3rd Year", "4th Year"].includes(yearLevel) ? "college"
-        : "";
-
+        : ["1st Year", "2nd Year", "3rd Year", "4th Year"].includes(yearLevel) ? "college" : "";
     Array.from(courseSelect.options).forEach(option => {
-        if (!option.dataset.level) {
-            option.hidden = false;
-            return;
-        }
-        option.hidden = selectedLevel !== "" && option.dataset.level !== selectedLevel;
+        if (!option.dataset.level) option.hidden = false;
+        else option.hidden = selectedLevel !== "" && option.dataset.level !== selectedLevel;
     });
-
     const selectedOption = courseSelect.selectedOptions[0];
-    if (selectedOption?.dataset.level && selectedOption.dataset.level !== selectedLevel) {
-        courseSelect.value = "";
-    }
+    if (selectedOption?.dataset.level && selectedOption.dataset.level !== selectedLevel) courseSelect.value = "";
     courseSelect.required = Boolean(selectedLevel);
+}
+
+const facultyCourses = {
+    "Science, Technology, Engineering, and Mathematics (STEM)": ["STEM", "ICT", "BSCS", "BSEN", "ACT"],
+    "Humanities & Arts": [],
+    "Social & Behavioral Sciences": [],
+    "Law, Public Safety, & Governance": ["HUMSS", "GAS"],
+    "Business & Management": ["ABM", "BSAIS", "GAS"],
+    "Health & Medical Sciences": ["STEM", "BSEN", "GAS"],
+    "Information Technology (IT) Services": ["ACT", "BSCS", "BSAIS", "ICT", "STEM", "GAS"],
+    "Campus Safety & Security": ["HUMSS", "GAS", "ICT"],
+    "Student Affairs & Auxiliary Services": ["HUMSS", "ABM", "ICT", "GAS"],
+    "Finance & Corporate Administration": ["ABM", "BSAIS", "HUMSS", "BSCS", "GAS"],
+    "Facilities & Estates Management": ["BSEN", "STEM", "ICT", "ABM", "GAS"]
+};
+
+function updateFacultyTeachingCourses() {
+    const expertise = document.getElementById("facultyExpertiseSelect")?.value;
+    const courseSelect = document.getElementById("facultyTeachingCourseSelect");
+    if (!courseSelect) return;
+    const courses = facultyCourses[expertise] || [];
+    courseSelect.replaceChildren(new Option(courses.length ? "Select strand / course taught" : "No strand/course listed", ""));
+    courses.forEach(course => courseSelect.add(new Option(course, course)));
+    courseSelect.disabled = courses.length === 0;
+    courseSelect.required = courses.length > 0;
+    courseSelect.value = "";
 }
 
 function toggleAccountFields() {
@@ -62,6 +79,7 @@ function toggleAccountFields() {
     document.getElementById("studentAccountFields")?.classList.toggle("hidden", role !== "student");
     document.getElementById("facultyAccountFields")?.classList.toggle("hidden", role !== "faculty");
     updateCourseOptions();
+    updateFacultyTeachingCourses();
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -70,30 +88,26 @@ window.addEventListener("DOMContentLoaded", () => {
     const scheduleFormOutput = document.getElementById("scheduleFormOutput");
     const accountForm = document.getElementById("createUserForm");
     const accountOutput = document.getElementById("accountOutput");
-
     document.getElementById("accountRole")?.addEventListener("change", toggleAccountFields);
     document.getElementById("yearLevelSelect")?.addEventListener("change", updateCourseOptions);
+    document.getElementById("facultyExpertiseSelect")?.addEventListener("change", updateFacultyTeachingCourses);
     updateCourseOptions();
-
+    updateFacultyTeachingCourses();
     accountForm?.addEventListener("submit", async event => {
         event.preventDefault();
         showOutput(accountOutput, "Creating account and generating password...");
         try {
             const data = await jsonRequest("create_user.php", { method: "POST", body: new FormData(accountForm), headers: { "Accept": "application/json" } });
-            accountOutput.innerHTML = `<strong>Save these credentials now</strong><br>Account ID: ${data.account_id}<br>Email: ${data.email}<br>Temporary password: <b>${data.password}</b><br><small>This password is shown only once.</small>`;
+            accountOutput.innerHTML = `<strong>Save these credentials now</strong><br>Account ID: ${data.account_id}<br>Email: ${data.email}<br>Temporary password: <b>${data.password}</b>`;
             accountOutput.classList.remove("hidden", "output-error");
             accountForm.reset();
             toggleAccountFields();
-        } catch (error) {
-            showOutput(accountOutput, error.message, "error");
-        }
+        } catch (error) { showOutput(accountOutput, error.message, "error"); }
     });
-
     document.getElementById("addScheduleBtn")?.addEventListener("click", () => modal?.classList.remove("hidden"));
     document.getElementById("viewSchedulesBtn")?.addEventListener("click", loadSchedules);
     document.getElementById("closeScheduleBtn")?.addEventListener("click", () => modal?.classList.add("hidden"));
     modal?.addEventListener("click", event => { if (event.target === modal) modal.classList.add("hidden"); });
-
     scheduleForm?.addEventListener("submit", async event => {
         event.preventDefault();
         showOutput(scheduleFormOutput, "Saving schedule...");
@@ -102,17 +116,11 @@ window.addEventListener("DOMContentLoaded", () => {
             showOutput(scheduleFormOutput, `${data.message} Faculty assigned successfully.`);
             scheduleForm.reset();
             await loadSchedules();
-        } catch (error) {
-            showOutput(scheduleFormOutput, error.message, "error");
-        }
+        } catch (error) { showOutput(scheduleFormOutput, error.message, "error"); }
     });
-
     document.getElementById("viewLogsBtn")?.addEventListener("click", () => {
         const logs = document.getElementById("activityLogs");
         const output = document.getElementById("logsOutput");
-        if (logs && output) {
-            output.innerHTML = logs.innerHTML;
-            output.classList.remove("hidden");
-        }
+        if (logs && output) { output.innerHTML = logs.innerHTML; output.classList.remove("hidden"); }
     });
 });
