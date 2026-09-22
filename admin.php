@@ -9,7 +9,7 @@ if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
 
 $admin_name = htmlspecialchars($_SESSION['name'] ?? 'Admin', ENT_QUOTES, 'UTF-8');
 $faculty_members = [];
-$faculty_result = $conn->query("SELECT id, full_name, faculty_id, department FROM users WHERE role = 'faculty' AND status = 'Registered' ORDER BY full_name ASC");
+$faculty_result = $conn->query("SELECT id, full_name, faculty_id, faculty_expertise FROM users WHERE role = 'faculty' AND status = 'Registered' ORDER BY full_name ASC");
 if ($faculty_result) {
     while ($faculty = $faculty_result->fetch_assoc()) $faculty_members[] = $faculty;
 }
@@ -44,9 +44,8 @@ if ($faculty_result) {
             <select name="course" id="courseSelect" aria-label="Strand or course"><option value="">Select strand / course</option><optgroup label="Senior High School Strands"><option value="STEM" data-level="shs">STEM</option><option value="HUMSS" data-level="shs">HUMSS</option><option value="ABM" data-level="shs">ABM</option><option value="GAS" data-level="shs">GAS</option><option value="ICT-Programming" data-level="shs">ICT-Programming</option><option value="ICT-CSS" data-level="shs">ICT-CSS</option><option value="ICT-Animation" data-level="shs">ICT-Animation</option></optgroup><optgroup label="College Programs"><option value="BSCS" data-level="college">BSCS</option><option value="BSEN" data-level="college">BSEN</option><option value="BSAIS" data-level="college">BSAIS</option><option value="ACT" data-level="college">ACT</option></optgroup></select>
           </div>
           <div id="facultyAccountFields" class="hidden">
-            <select name="faculty_expertise" id="facultyExpertiseSelect"><option value="">Select faculty expertise</option><option value="Science, Technology, Engineering, and Mathematics (STEM)">Science, Technology, Engineering, and Mathematics (STEM)</option><option value="Humanities & Arts">Humanities &amp; Arts</option><option value="Social & Behavioral Sciences">Social &amp; Behavioral Sciences</option><option value="Law, Public Safety, & Governance">Law, Public Safety, &amp; Governance</option><option value="Business & Management">Business &amp; Management</option><option value="Health & Medical Sciences">Health &amp; Medical Sciences</option><option value="Information Technology (IT) Services">Information Technology (IT) Services</option><option value="Campus Safety & Security">Campus Safety &amp; Security</option><option value="Student Affairs & Auxiliary Services">Student Affairs &amp; Auxiliary Services</option><option value="Finance & Corporate Administration">Finance &amp; Corporate Administration</option><option value="Facilities & Estates Management">Facilities &amp; Estates Management</option></select>
-            <select name="faculty_teaching_course" id="facultyTeachingCourseSelect"><option value="">Select strand / course taught</option></select>
-            <input name="department" placeholder="Department" required>
+            <select name="faculty_expertise" id="facultyExpertiseSelect" required><option value="">Select faculty expertise</option><option value="Science, Technology, Engineering, and Mathematics (STEM)">Science, Technology, Engineering, and Mathematics (STEM)</option><option value="Humanities & Arts">Humanities &amp; Arts</option><option value="Social & Behavioral Sciences">Social &amp; Behavioral Sciences</option><option value="Law, Public Safety, & Governance">Law, Public Safety, &amp; Governance</option><option value="Business & Management">Business &amp; Management</option><option value="Health & Medical Sciences">Health &amp; Medical Sciences</option><option value="Information Technology (IT) Services">Information Technology (IT) Services</option><option value="Campus Safety & Security">Campus Safety &amp; Security</option><option value="Student Affairs & Auxiliary Services">Student Affairs &amp; Auxiliary Services</option><option value="Finance & Corporate Administration">Finance &amp; Corporate Administration</option><option value="Facilities & Estates Management">Facilities &amp; Estates Management</option></select>
+            <select name="faculty_teaching_course" id="facultyTeachingCourseSelect" required><option value="">Select strand / course taught</option></select>
           </div>
           <button class="primary" type="submit">Create Account &amp; Generate Password</button>
           <div id="accountOutput" class="admin-output hidden" aria-live="polite"></div>
@@ -56,6 +55,6 @@ if ($faculty_result) {
       <div class="card admin"><h3>👀 Real-Time Activity Monitor</h3><div id="activityLogs"><p><b>Live:</b> John (BSCS 2A) Timed In - 8:01 AM</p><p><b>Live:</b> Ma'am Santos confirmed excused - 8:05 AM</p></div><button id="viewLogsBtn" type="button">View Full Logs</button><div id="logsOutput" class="admin-output hidden" aria-live="polite"></div></div>
     </div>
   </div>
-  <script src="admin.js?v=7"></script>
+  <script src="admin.js?v=8"></script>
 </body>
 </html>
