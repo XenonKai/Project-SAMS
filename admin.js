@@ -76,8 +76,19 @@ function updateFacultyTeachingCourses() {
 
 function toggleAccountFields() {
     const role = document.getElementById("accountRole")?.value;
-    document.getElementById("studentAccountFields")?.classList.toggle("hidden", role !== "student");
-    document.getElementById("facultyAccountFields")?.classList.toggle("hidden", role !== "faculty");
+    const studentFields = document.getElementById("studentAccountFields");
+    const facultyFields = document.getElementById("facultyAccountFields");
+    studentFields?.classList.toggle("hidden", role !== "student");
+    facultyFields?.classList.toggle("hidden", role !== "faculty");
+
+    // Hidden faculty controls must not remain browser-required for student accounts.
+    facultyFields?.querySelectorAll("select, input, textarea").forEach(field => {
+        field.required = role === "faculty";
+    });
+    studentFields?.querySelectorAll("select, input, textarea").forEach(field => {
+        field.required = role === "student";
+    });
+
     updateCourseOptions();
     updateFacultyTeachingCourses();
 }
@@ -91,6 +102,7 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("accountRole")?.addEventListener("change", toggleAccountFields);
     document.getElementById("yearLevelSelect")?.addEventListener("change", updateCourseOptions);
     document.getElementById("facultyExpertiseSelect")?.addEventListener("change", updateFacultyTeachingCourses);
+    toggleAccountFields();
     updateCourseOptions();
     updateFacultyTeachingCourses();
     accountForm?.addEventListener("submit", async event => {
