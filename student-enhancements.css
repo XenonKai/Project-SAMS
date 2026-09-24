@@ -1,0 +1,19 @@
+.clickable-card { cursor: pointer; transition: transform .2s, border-color .2s, background .2s; }
+.clickable-card:hover, .clickable-card:focus-visible { transform: translateY(-3px); border-color: var(--cyan); background: rgba(54,163,255,.12); outline: none; }
+.card-link { display: inline-block; margin-top: 12px; color: var(--cyan); font-weight: 700; }
+.subtitle { color: var(--muted); }
+.schedule-details { display: grid; gap: 4px; min-height: 70px; margin: 10px 0; padding: 12px; border: 1px solid var(--line); border-radius: 10px; background: rgba(4,13,26,.35); color: var(--muted); }
+.schedule-details strong { color: var(--text); font-size: 1.05rem; }
+.action-row { display: flex; gap: 10px; }
+.action-row button { flex: 1; }
+.feedback, .student-message { min-height: 20px; margin-top: 8px; color: var(--cyan); font-size: .9rem; }
+.empty-state { color: var(--muted); padding: 12px 0; }
+.attendance-summary { flex-wrap: wrap; }
+.table-wrap { overflow-x: auto; border: 1px solid var(--line); border-radius: 16px; background: var(--panel); }
+table { width: 100%; border-collapse: collapse; min-width: 720px; }
+th, td { padding: 15px 16px; text-align: left; border-bottom: 1px solid var(--line); }
+th { color: var(--cyan); font-size: .8rem; text-transform: uppercase; letter-spacing: .05em; }
+td { color: var(--muted); }
+tr:last-child td { border-bottom: 0; }
+small { color: var(--muted); display: block; margin-top: 7px; }
+@media (max-width: 600px) { .action-row { flex-direction: column; gap: 0; } }
