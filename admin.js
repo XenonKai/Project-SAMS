@@ -14,6 +14,10 @@ async function jsonRequest(url, options) {
     return data;
 }
 
+function escapeHtml(value) {
+    return String(value ?? '').replace(/[&<>'"]/g, character => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#039;', '"': '&quot;' }[character]));
+}
+
 function formatSchedule(schedule) {
     const faculty = schedule.faculty ? ` • Faculty: ${schedule.faculty}` : " • Faculty: Unassigned";
     return `${schedule.schedule_date} • ${schedule.start_time.slice(0, 5)}-${schedule.end_time.slice(0, 5)} • ${schedule.subject} • ${schedule.course} ${schedule.section}${faculty}${schedule.room ? ` • Room ${schedule.room}` : ""}`;
@@ -25,12 +29,23 @@ async function loadSchedules() {
     try {
         const data = await jsonRequest("list_schedules.php", { headers: { "X-Requested-With": "XMLHttpRequest" } });
         output.innerHTML = data.schedules.length
-            ? `<strong>Saved schedules</strong><ul>${data.schedules.map(schedule => `<li>${formatSchedule(schedule)}</li>`).join("")}</ul>`
+            ? `<strong>Saved schedules</strong><ul>${data.schedules.map(schedule => `<li>${escapeHtml(formatSchedule(schedule))}</li>`).join("")}</ul>`
             : "No saved schedules yet.";
         output.classList.remove("hidden");
-    } catch (error) {
-        showOutput(output, error.message, "error");
-    }
+    } catch (error) { showOutput(output, error.message, "error"); }
+}
+
+async function loadAssignments() {
+    const output = document.getElementById("assignmentOutput");
+    if (!output) return;
+    showOutput(output, "Loading current enrollments...");
+    try {
+        const data = await jsonRequest("list_assignments.php", { headers: { "X-Requested-With": "XMLHttpRequest" } });
+        output.innerHTML = data.assignments.length
+            ? `<strong>Current subject enrollments</strong><div class="assignment-list">${data.assignments.map(item => `<div class="assignment-row"><span><strong>${escapeHtml(item.student_name)}</strong><small>${escapeHtml(item.student_id || 'No student ID')} · ${escapeHtml(item.course || '')} ${escapeHtml(item.year_level || '')}</small></span><span>${escapeHtml(item.subject)}<small>${escapeHtml(item.schedule_date)} · ${escapeHtml(item.start_time.slice(0, 5))}-${escapeHtml(item.end_time.slice(0, 5))} · ${escapeHtml(item.section)}</small></span></div>`).join("")}</div>`
+            : "No student assignments yet.";
+        output.classList.remove("hidden");
+    } catch (error) { showOutput(output, error.message, "error"); }
 }
 
 function updateCourseOptions() {
@@ -50,8 +65,7 @@ function updateCourseOptions() {
 
 const facultyCourses = {
     "Science, Technology, Engineering, and Mathematics (STEM)": ["STEM", "ICT", "BSCS", "BSEN", "ACT"],
-    "Humanities & Arts": [],
-    "Social & Behavioral Sciences": [],
+    "Humanities & Arts": [], "Social & Behavioral Sciences": [],
     "Law, Public Safety, & Governance": ["HUMSS", "GAS"],
     "Business & Management": ["ABM", "BSAIS", "GAS"],
     "Health & Medical Sciences": ["STEM", "BSEN", "GAS"],
@@ -80,17 +94,9 @@ function toggleAccountFields() {
     const facultyFields = document.getElementById("facultyAccountFields");
     studentFields?.classList.toggle("hidden", role !== "student");
     facultyFields?.classList.toggle("hidden", role !== "faculty");
-
-    // Hidden faculty controls must not remain browser-required for student accounts.
-    facultyFields?.querySelectorAll("select, input, textarea").forEach(field => {
-        field.required = role === "faculty";
-    });
-    studentFields?.querySelectorAll("select, input, textarea").forEach(field => {
-        field.required = role === "student";
-    });
-
-    updateCourseOptions();
-    updateFacultyTeachingCourses();
+    facultyFields?.querySelectorAll("select, input, textarea").forEach(field => { field.required = role === "faculty"; });
+    studentFields?.querySelectorAll("select, input, textarea").forEach(field => { field.required = role === "student"; });
+    updateCourseOptions(); updateFacultyTeachingCourses();
 }
 
 window.addEventListener("DOMContentLoaded", () => {
@@ -99,40 +105,48 @@ window.addEventListener("DOMContentLoaded", () => {
     const scheduleFormOutput = document.getElementById("scheduleFormOutput");
     const accountForm = document.getElementById("createUserForm");
     const accountOutput = document.getElementById("accountOutput");
+    const assignmentForm = document.getElementById("assignmentForm");
+    const assignmentOutput = document.getElementById("assignmentOutput");
+
     document.getElementById("accountRole")?.addEventListener("change", toggleAccountFields);
     document.getElementById("yearLevelSelect")?.addEventListener("change", updateCourseOptions);
     document.getElementById("facultyExpertiseSelect")?.addEventListener("change", updateFacultyTeachingCourses);
-    toggleAccountFields();
-    updateCourseOptions();
-    updateFacultyTeachingCourses();
+    toggleAccountFields(); updateCourseOptions(); updateFacultyTeachingCourses();
+    loadAssignments();
+
     accountForm?.addEventListener("submit", async event => {
-        event.preventDefault();
-        showOutput(accountOutput, "Creating account and generating password...");
+        event.preventDefault(); showOutput(accountOutput, "Creating account and generating password...");
         try {
             const data = await jsonRequest("create_user.php", { method: "POST", body: new FormData(accountForm), headers: { "Accept": "application/json" } });
-            accountOutput.innerHTML = `<strong>Save these credentials now</strong><br>Account ID: ${data.account_id}<br>Email: ${data.email}<br>Temporary password: <b>${data.password}</b>`;
-            accountOutput.classList.remove("hidden", "output-error");
-            accountForm.reset();
-            toggleAccountFields();
+            accountOutput.innerHTML = `<strong>Save these credentials now</strong><br>Account ID: ${escapeHtml(data.account_id)}<br>Email: ${escapeHtml(data.email)}<br>Temporary password: <b>${escapeHtml(data.password)}</b>`;
+            accountOutput.classList.remove("hidden", "output-error"); accountForm.reset(); toggleAccountFields();
         } catch (error) { showOutput(accountOutput, error.message, "error"); }
     });
+
+    assignmentForm?.addEventListener("submit", async event => {
+        event.preventDefault(); showOutput(assignmentOutput, "Assigning student to schedule...");
+        try {
+            const data = await jsonRequest("assign_student.php", { method: "POST", body: new FormData(assignmentForm), headers: { "Accept": "application/json" } });
+            showOutput(assignmentOutput, data.message); assignmentForm.reset(); await loadAssignments();
+        } catch (error) { showOutput(assignmentOutput, error.message, "error"); }
+    });
+
     document.getElementById("addScheduleBtn")?.addEventListener("click", () => modal?.classList.remove("hidden"));
     document.getElementById("viewSchedulesBtn")?.addEventListener("click", loadSchedules);
+    document.getElementById("viewAssignmentsBtn")?.addEventListener("click", loadAssignments);
     document.getElementById("closeScheduleBtn")?.addEventListener("click", () => modal?.classList.add("hidden"));
     modal?.addEventListener("click", event => { if (event.target === modal) modal.classList.add("hidden"); });
     scheduleForm?.addEventListener("submit", async event => {
-        event.preventDefault();
-        showOutput(scheduleFormOutput, "Saving schedule...");
+        event.preventDefault(); showOutput(scheduleFormOutput, "Saving schedule...");
         try {
             const data = await jsonRequest("create_schedule.php", { method: "POST", body: new FormData(scheduleForm), headers: { "Accept": "application/json" } });
-            showOutput(scheduleFormOutput, `${data.message} Faculty assigned successfully.`);
-            scheduleForm.reset();
-            await loadSchedules();
+            showOutput(scheduleFormOutput, `${data.message} Faculty assigned successfully.`); scheduleForm.reset(); await loadSchedules();
+            const scheduleSelect = assignmentForm?.querySelector('[name="schedule_id"]');
+            if (scheduleSelect && data.id) { const option = document.createElement('option'); option.value = data.id; option.textContent = 'New schedule'; scheduleSelect.appendChild(option); }
         } catch (error) { showOutput(scheduleFormOutput, error.message, "error"); }
     });
     document.getElementById("viewLogsBtn")?.addEventListener("click", () => {
-        const logs = document.getElementById("activityLogs");
-        const output = document.getElementById("logsOutput");
+        const logs = document.getElementById("activityLogs"), output = document.getElementById("logsOutput");
         if (logs && output) { output.innerHTML = logs.innerHTML; output.classList.remove("hidden"); }
     });
 });
