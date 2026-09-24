@@ -23,8 +23,8 @@ $faculty_profession = trim($_POST['faculty_profession'] ?? '');
 
 $shs_year_levels = ['Grade 11', 'Grade 12'];
 $college_year_levels = ['1st Year', '2nd Year', '3rd Year', '4th Year'];
-$shs_strands = ['STEM', 'HUMSS', 'ABM', 'GAS'];
-$college_courses = ['BSCS', 'BSIT', 'BSHM', 'BSBA'];
+$shs_strands = ['STEM', 'HUMSS', 'ABM', 'GAS', 'ICT-Programming', 'ICT-CSS', 'ICT-Animation'];
+$college_courses = ['BSCS', 'BSEN', 'BSAIS', 'ACT'];
 $expertise = [
     'Science, Technology, Engineering, and Mathematics (STEM)', 'Humanities & Arts', 'Social & Behavioral Sciences',
     'Law, Public Safety, & Governance', 'Business & Management', 'Health & Medical Sciences',
