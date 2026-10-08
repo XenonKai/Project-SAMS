@@ -48,7 +48,7 @@ if (!$f) {
     response(false, 'The selected faculty account is not registered.', 400);
 }
 
-$conn->query("CREATE TABLE IF NOT EXISTS schedules (
+$create_table = $conn->query("CREATE TABLE IF NOT EXISTS schedules (
     id INT AUTO_INCREMENT PRIMARY KEY,
     subject VARCHAR(100) NOT NULL,
     course VARCHAR(100) NOT NULL,
@@ -59,7 +59,12 @@ $conn->query("CREATE TABLE IF NOT EXISTS schedules (
     room VARCHAR(50) NULL,
     faculty_id INT NULL,
     faculty VARCHAR(100) NULL,
-    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+if (!$create_table) {
+    error_log('Schedule table creation failed: ' . $conn->error);
+    response(false, 'The schedule could not be saved.', 500);
+}
 
 $cols = $conn->query("SHOW COLUMNS FROM schedules LIKE 'faculty_id'");
 if (!$cols) {
@@ -77,7 +82,7 @@ if ($cols->num_rows === 0) {
 $q = $conn->prepare('INSERT INTO schedules 
     (subject, course, section, schedule_date, start_time, end_time, room, faculty_id, faculty) 
     VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
-    
+
 if (!$q) {
     error_log('Schedule insert preparation failed: ' . $conn->error);
     response(false, 'The schedule could not be saved.', 500);
