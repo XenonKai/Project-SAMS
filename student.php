@@ -84,6 +84,7 @@ $total = array_sum($counts);
 $recorded = $total - ($counts['absent'] ?? 0);
 $attendance_rate = $total ? (int)round(($recorded / $total) * 100) : 0;
 $today = date('Y-m-d');
+$current_time = date('H:i:s');
 $status_labels = [
     'present' => 'Present',
     'late' => 'Late',
@@ -122,14 +123,11 @@ $status_labels = [
         <?php if (!$subjects): ?>
           <p class="empty-state">No subjects have been assigned to you yet.</p>
         <?php else: ?>
-          <label for="scheduleChoice">Choose a scheduled subject</label>
+          <label for="scheduleChoice">Choose an active scheduled subject</label>
           <select id="scheduleChoice">
-            <?php foreach ($subjects as $index => $subject): ?>
-              <option value="<?php echo (int)$subject['id']; ?>" data-date="<?php echo e($subject['schedule_date']); ?>" <?php echo $index === 0 ? 'selected' : ''; ?>>
-                <?php echo e($subject['subject'].' • '.$subject['schedule_date'].' • '.substr($subject['start_time'], 0, 5).'-'.substr($subject['end_time'], 0, 5)); ?>
-              </option>
-            <?php endforeach; ?>
+            <option value="">-- Select a subject --</option>
           </select>
+          <p id="noSchedulesMessage" class="empty-state hidden">No active schedules at this time. Current time: <span id="currentTimeDisplay"></span></p>
 
           <div id="selectedScheduleDetails" class="schedule-details"></div>
 
@@ -139,8 +137,8 @@ $status_labels = [
           </p>
 
           <div class="action-row">
-            <button class="primary" id="timeInButton" type="button">Time In</button>
-            <button id="timeOutButton" type="button">Time Out</button>
+            <button class="primary" id="timeInButton" type="button" disabled>Time In</button>
+            <button id="timeOutButton" type="button" disabled>Time Out</button>
           </div>
 
           <div id="scheduleFeedback" class="feedback" aria-live="polite"></div>
@@ -171,6 +169,65 @@ $status_labels = [
     const details = document.getElementById('selectedScheduleDetails');
     const feedback = document.getElementById('scheduleFeedback');
     const timeInText = document.getElementById('attendanceTimeIn');
+    const noSchedulesMessage = document.getElementById('noSchedulesMessage');
+    const currentTimeDisplay = document.getElementById('currentTimeDisplay');
+    const timeInButton = document.getElementById('timeInButton');
+    const timeOutButton = document.getElementById('timeOutButton');
+
+    function getCurrentTime() {
+      const now = new Date();
+      return {
+        hours: now.getHours(),
+        minutes: now.getMinutes(),
+        seconds: now.getSeconds(),
+        timeString: String(now.getHours()).padStart(2, '0') + ':' + 
+                    String(now.getMinutes()).padStart(2, '0') + ':' + 
+                    String(now.getSeconds()).padStart(2, '0')
+      };
+    }
+
+    function isScheduleActive(subject) {
+      // Only show schedules for today
+      if (subject.schedule_date !== today) return false;
+
+      const currentTime = getCurrentTime();
+      const startParts = subject.start_time.split(':');
+      const endParts = subject.end_time.split(':');
+
+      const startTotalSeconds = parseInt(startParts[0]) * 3600 + parseInt(startParts[1]) * 60 + parseInt(startParts[2]);
+      const endTotalSeconds = parseInt(endParts[0]) * 3600 + parseInt(endParts[1]) * 60 + parseInt(endParts[2]);
+      const currentTotalSeconds = currentTime.hours * 3600 + currentTime.minutes * 60 + currentTime.seconds;
+
+      // Schedule is active if current time falls within start and end time
+      return currentTotalSeconds >= startTotalSeconds && currentTotalSeconds <= endTotalSeconds;
+    }
+
+    function populateScheduleOptions() {
+      const activeSchedules = subjects.filter(isScheduleActive);
+      const currentTime = getCurrentTime();
+      currentTimeDisplay.textContent = currentTime.timeString;
+
+      choice.innerHTML = '<option value="">-- Select a subject --</option>';
+
+      if (activeSchedules.length === 0) {
+        noSchedulesMessage.classList.remove('hidden');
+        details.innerHTML = '';
+        timeInText.textContent = 'No active schedules at this time.';
+        timeInButton.disabled = true;
+        timeOutButton.disabled = true;
+      } else {
+        noSchedulesMessage.classList.add('hidden');
+        activeSchedules.forEach((subject, index) => {
+          const option = document.createElement('option');
+          option.value = subject.id;
+          option.textContent = `${subject.subject} • ${subject.start_time.slice(0, 5)}-${subject.end_time.slice(0, 5)}`;
+          if (index === 0) option.selected = true;
+          choice.appendChild(option);
+        });
+        // Auto-refresh when first option is loaded
+        refreshSchedule();
+      }
+    }
 
     function selectedSubject() {
       return subjects.find(item => String(item.id) === choice.value);
@@ -178,7 +235,13 @@ $status_labels = [
 
     function refreshSchedule() {
       const item = selectedSubject();
-      if (!item) return;
+      if (!item) {
+        details.innerHTML = '';
+        timeInText.textContent = 'No schedule selected.';
+        timeInButton.disabled = true;
+        timeOutButton.disabled = true;
+        return;
+      }
 
       details.innerHTML = `
         <strong>${item.subject}</strong>
@@ -194,8 +257,11 @@ $status_labels = [
           + ` · Status: ${currentStatus}`
         : `No time in recorded for ${item.subject} yet.`;
 
-      document.getElementById('timeInButton').disabled = item.schedule_date !== today;
-      document.getElementById('timeOutButton').disabled = !item.time_in || item.schedule_date !== today;
+      // Enable Time In button only if no time in recorded yet
+      timeInButton.disabled = !!item.time_in;
+      
+      // Enable Time Out button only if time in is recorded and no time out yet
+      timeOutButton.disabled = !item.time_in || !!item.time_out;
     }
 
     async function record(action) {
@@ -229,9 +295,22 @@ $status_labels = [
     }
 
     choice?.addEventListener('change', refreshSchedule);
-    document.getElementById('timeInButton')?.addEventListener('click', () => record('time_in'));
-    document.getElementById('timeOutButton')?.addEventListener('click', () => record('time_out'));
-    refreshSchedule();
+    timeInButton?.addEventListener('click', () => record('time_in'));
+    timeOutButton?.addEventListener('click', () => record('time_out'));
+
+    // Initial population of active schedules
+    populateScheduleOptions();
+
+    // Refresh active schedules every 30 seconds to match time changes
+    setInterval(() => {
+      populateScheduleOptions();
+    }, 30000);
+
+    // Update current time display every second
+    setInterval(() => {
+      const currentTime = getCurrentTime();
+      currentTimeDisplay.textContent = currentTime.timeString;
+    }, 1000);
   </script>
 </body>
 </html>
