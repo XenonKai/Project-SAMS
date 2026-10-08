@@ -1,12 +1,106 @@
 <?php
-session_start();
-require 'db.php';
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') { header('Location: index.php'); exit(); }
-$conn->query("CREATE TABLE IF NOT EXISTS schedules (id INT AUTO_INCREMENT PRIMARY KEY, subject VARCHAR(100) NOT NULL, course VARCHAR(100) NOT NULL, section VARCHAR(50) NOT NULL, schedule_date DATE NOT NULL, start_time TIME NOT NULL, end_time TIME NOT NULL, room VARCHAR(50) NULL, faculty_id INT NULL, faculty VARCHAR(100) NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-$conn->query("CREATE TABLE IF NOT EXISTS student_subjects (id INT AUTO_INCREMENT PRIMARY KEY, student_id INT NOT NULL, schedule_id INT NOT NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, UNIQUE KEY unique_enrollment (student_id, schedule_id)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
-$conn->query("ALTER TABLE schedules ADD COLUMN faculty_id INT NULL");
+    session_start();
+    require 'db.php';
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'faculty') { 
+    header('Location: index.php'); 
+    exit(); 
+    }
+
+$conn->query("CREATE TABLE IF NOT EXISTS schedules 
+    (id INT AUTO_INCREMENT PRIMARY KEY, 
+    subject VARCHAR(100) NOT NULL, 
+    course VARCHAR(100) NOT NULL, 
+    section VARCHAR(50) NOT NULL, 
+    schedule_date DATE NOT NULL, 
+    start_time TIME NOT NULL, 
+    end_time TIME NOT NULL, 
+    room VARCHAR(50) NULL, 
+    faculty_id INT NULL, 
+    faculty VARCHAR(100) NULL, 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) 
+    ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$conn->query("CREATE TABLE IF NOT EXISTS student_subjects 
+    (id INT AUTO_INCREMENT PRIMARY KEY, 
+    student_id INT NOT NULL, 
+    schedule_id INT NOT NULL, 
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP, 
+    UNIQUE KEY unique_enrollment (student_id, schedule_id)
+    ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
 $faculty_id = (int)($_SESSION['user_id'] ?? 0);
 $faculty_name = htmlspecialchars($_SESSION['name'] ?? 'Faculty', ENT_QUOTES, 'UTF-8');
-$stmt = $conn->prepare("SELECT id, subject, course, section, schedule_date, start_time, end_time, room FROM schedules WHERE faculty_id = ? OR (faculty_id IS NULL AND faculty = ?) ORDER BY schedule_date, start_time");
-$stmt->bind_param('is', $faculty_id, $_SESSION['name']); $stmt->execute(); $result = $stmt->get_result(); $schedules = []; while ($row = $result->fetch_assoc()) $schedules[] = $row;
-?><!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Faculty Dashboard - SAMS</title><link rel="stylesheet" href="faculty.css?v=3"></head><body><div class="header"><div class="header-title"><h2>ACLC College of Malolos - SAMS</h2><span>Faculty Dashboard</span></div><div class="header-user"><span>Welcome, <strong><?php echo $faculty_name; ?></strong></span><a href="logout.php">Logout</a></div></div><div class="container"><h1>Faculty Dashboard</h1><p class="subtitle">Your assigned schedules and subject masterlists.</p><div class="dashboard-grid"><div class="card clickable-card"><h3>📖 Assigned Schedules</h3><p><?php echo count($schedules); ?> schedule(s) assigned to you.</p><a class="card-link" target="_blank" href="faculty_schedule.php">Open full schedule table</a></div><div class="card"><h3>📋 Subject Masterlists</h3><?php if (!$schedules): ?><p>No schedules have been assigned yet.</p><?php else: ?><div class="schedule-list"><?php foreach ($schedules as $schedule): ?><a class="schedule-item" href="faculty_masterlist.php?schedule_id=<?php echo (int)$schedule['id']; ?>" target="_blank"><strong><?php echo htmlspecialchars($schedule['subject'], ENT_QUOTES, 'UTF-8'); ?></strong><span><?php echo htmlspecialchars($schedule['course'].' '.$schedule['section'], ENT_QUOTES, 'UTF-8'); ?></span><small>Open enrolled students</small></a><?php endforeach; ?></div><?php endif; ?></div><div class="card"><h3>🏫 Sections Assigned</h3><?php if (!$schedules): ?><p>No sections assigned yet.</p><?php else: ?><ul><?php foreach ($schedules as $schedule): ?><li><?php echo htmlspecialchars($schedule['course'].' '.$schedule['section'].' — '.$schedule['subject'], ENT_QUOTES, 'UTF-8'); ?></li><?php endforeach; ?></ul><?php endif; ?></div><div class="card attendance-card"><h3>✅ Attendance</h3><p>Attendance records will appear here after students time in and out through their assigned subjects.</p></div></div></div></body></html>
+$stmt = $conn->prepare("SELECT id, subject, course, section, schedule_date, start_time, end_time, room 
+    FROM schedules 
+    WHERE faculty_id = ? 
+    OR (faculty_id IS NULL AND faculty = ?) 
+    ORDER BY schedule_date, start_time");
+$stmt->bind_param('is', $faculty_id, $_SESSION['name']); 
+$stmt->execute(); 
+$result = $stmt->get_result(); 
+$schedules = []; 
+while ($row = $result->fetch_assoc()) $schedules[] = $row;
+?>
+
+<!DOCTYPE html>
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Faculty Dashboard - SAMS</title>
+            <link rel="stylesheet" href="faculty.css?v=3">
+        </head>
+        
+        <body>
+            <div class="header">
+                <div class="header-title">
+                    <h2>ACLC College of Malolos - SAMS</h2>
+                    <span>Faculty Dashboard</span>
+                </div>
+                
+                <div class="header-user">
+                    <span>Welcome, <strong><?php echo $faculty_name; ?></strong></span>
+                    <a href="logout.php">Logout</a>
+                </div>
+            </div>
+            
+            <div class="container">
+                <h1>Faculty Dashboard</h1>
+                <p class="subtitle">Your assigned schedules and subject masterlists.</p>
+                <div class="dashboard-grid">
+                    <div class="card clickable-card">
+                        <h3>📖 Assigned Schedules</h3>
+                        <p><?php echo count($schedules); ?> schedule(s) assigned to you.</p>
+                        <a class="card-link" target="_blank" href="faculty_schedule.php">Open full schedule table</a>
+                    </div>
+                    
+                    <div class="card">
+                        <h3>📋 Subject Masterlists</h3><?php if (!$schedules): ?>
+                            <p>No schedules have been assigned yet.</p>
+                            <?php else: ?>
+                                <div class="schedule-list"><?php foreach ($schedules as $schedule): ?>
+                                    <a class="schedule-item" href="faculty_masterlist.php?schedule_id=<?php echo (int)$schedule['id']; ?>" target="_blank">
+                                        <strong><?php echo htmlspecialchars($schedule['subject'], ENT_QUOTES, 'UTF-8'); ?></strong>
+                                        <span><?php echo htmlspecialchars($schedule['course'].' '.$schedule['section'], ENT_QUOTES, 'UTF-8'); ?></span>
+                                        <small>Open enrolled students</small>
+                                    </a>
+                                    <?php endforeach; ?>
+                                </div><?php endif; ?>
+                            </div>
+                            
+                            <div class="card">
+                                <h3>🏫 Sections Assigned</h3>
+                                <?php if (!$schedules): ?>
+                                    <p>No sections assigned yet.</p>
+                                    <?php else: ?><ul><?php foreach ($schedules as $schedule): ?><li><?php echo htmlspecialchars($schedule['course'].' '.$schedule['section'].' — '.$schedule['subject'], ENT_QUOTES, 'UTF-8'); ?></li><?php endforeach; ?></ul>
+                                        <?php endif; ?>
+                                    </div>
+                                    
+                                    <div class="card attendance-card">
+                                        <h3>✅ Attendance</h3>
+                                        <p>Attendance records will appear here after students time in and out through their assigned subjects.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </body>
+                        </html>

@@ -1,7 +1,7 @@
 <?php
-session_start();
-header('Content-Type: application/json; charset=utf-8');
-ini_set('display_errors', '0');
+    session_start();
+    header('Content-Type: application/json; charset=utf-8');
+    ini_set('display_errors', '0');
 
 function respond(bool $success, string $message, int $status = 200, array $extra = []): void {
     http_response_code($status);

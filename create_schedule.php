@@ -1,8 +1,92 @@
 <?php
-session_start(); header('Content-Type: application/json; charset=utf-8'); ini_set('display_errors','0');
-function response($ok,$message,$status=200,$extra=[]){http_response_code($status);echo json_encode(array_merge(['success'=>$ok,'message'=>$message],$extra));exit();}
-if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') response(false,'Your admin session has expired. Please log in again.',403); require 'db.php';
-$subject=trim($_POST['subject']??'');$course=trim($_POST['course']??'');$section=trim($_POST['section']??'');$date=trim($_POST['schedule_date']??'');$start=trim($_POST['start_time']??'');$end=trim($_POST['end_time']??'');$room=trim($_POST['room']??'');$faculty_id=(int)($_POST['faculty_id']??0);
-if(!$subject||!$course||!$section||!$date||!$start||!$end||!$faculty_id)response(false,'All schedule fields and a faculty member are required.',400);if($end<=$start)response(false,'End time must be later than start time.',400);
-$faculty=$conn->prepare("SELECT full_name FROM users WHERE id=? AND role='faculty' AND status='Registered'");$faculty->bind_param('i',$faculty_id);$faculty->execute();$f=$faculty->get_result()->fetch_assoc();if(!$f)response(false,'The selected faculty account is not registered.',400);
-$conn->query("CREATE TABLE IF NOT EXISTS schedules (id INT AUTO_INCREMENT PRIMARY KEY, subject VARCHAR(100) NOT NULL, course VARCHAR(100) NOT NULL, section VARCHAR(50) NOT NULL, schedule_date DATE NOT NULL, start_time TIME NOT NULL, end_time TIME NOT NULL, room VARCHAR(50) NULL, faculty_id INT NULL, faculty VARCHAR(100) NULL, created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");$conn->query("ALTER TABLE schedules ADD COLUMN faculty_id INT NULL");$q=$conn->prepare('INSERT INTO schedules(subject,course,section,schedule_date,start_time,end_time,room,faculty_id,faculty) VALUES(?,?,?,?,?,?,?,?,?)');$q->bind_param('sssssssis',$subject,$course,$section,$date,$start,$end,$room,$faculty_id,$f['full_name']);if(!$q->execute())response(false,'The schedule could not be saved.',500);response(true,'Schedule created successfully.',['id'=>$q->insert_id]);
+session_start();
+header('Content-Type: application/json; charset=utf-8');
+ini_set('display_errors', '0');
+
+function response($ok, $message, $status = 200, $extra = []) {
+    http_response_code($status);
+    echo json_encode(array_merge(['success' => $ok, 'message' => $message], $extra));
+    exit();
+}
+
+if (!isset($_SESSION['role']) || $_SESSION['role'] !== 'admin') {
+    response(false, 'Your admin session has expired. Please log in again.', 403);
+}
+
+require 'db.php';
+
+$subject = trim($_POST['subject'] ?? '');
+$course = trim($_POST['course'] ?? '');
+$section = trim($_POST['section'] ?? '');
+$date = trim($_POST['schedule_date'] ?? '');
+$start = trim($_POST['start_time'] ?? '');
+$end = trim($_POST['end_time'] ?? '');
+$room = trim($_POST['room'] ?? '');
+$faculty_id = (int)($_POST['faculty_id'] ?? 0);
+
+if (!$subject || !$course || !$section || !$date || !$start || !$end || !$faculty_id) {
+    response(false, 'All schedule fields and a faculty member are required.', 400);
+}
+if ($end <= $start) {
+    response(false, 'End time must be later than start time.', 400);
+}
+
+$faculty = $conn->prepare("SELECT full_name FROM users WHERE id = ? AND role = 'faculty' AND status = 'Registered'");
+if (!$faculty) {
+    error_log('Faculty lookup preparation failed: ' . $conn->error);
+    response(false, 'The schedule could not be saved.', 500);
+}
+
+$faculty->bind_param('i', $faculty_id);
+if (!$faculty->execute()) {
+    error_log('Faculty lookup failed: ' . $faculty->error);
+    response(false, 'The schedule could not be saved.', 500);
+}
+
+$f = $faculty->get_result()->fetch_assoc();
+if (!$f) {
+    response(false, 'The selected faculty account is not registered.', 400);
+}
+
+$conn->query("CREATE TABLE IF NOT EXISTS schedules (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    subject VARCHAR(100) NOT NULL,
+    course VARCHAR(100) NOT NULL,
+    section VARCHAR(50) NOT NULL,
+    schedule_date DATE NOT NULL,
+    start_time TIME NOT NULL,
+    end_time TIME NOT NULL,
+    room VARCHAR(50) NULL,
+    faculty_id INT NULL,
+    faculty VARCHAR(100) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP)) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4");
+
+$cols = $conn->query("SHOW COLUMNS FROM schedules LIKE 'faculty_id'");
+if (!$cols) {
+    error_log('Schedules column check failed: ' . $conn->error);
+    response(false, 'The schedule could not be saved.', 500);
+}
+
+if ($cols->num_rows === 0) {
+    if (!$conn->query("ALTER TABLE schedules ADD COLUMN faculty_id INT NULL")) {
+        error_log('Adding schedules.faculty_id failed: ' . $conn->error);
+        response(false, 'The schedule could not be saved.', 500);
+    }
+}
+
+$q = $conn->prepare('INSERT INTO schedules 
+    (subject, course, section, schedule_date, start_time, end_time, room, faculty_id, faculty) 
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)');
+    
+if (!$q) {
+    error_log('Schedule insert preparation failed: ' . $conn->error);
+    response(false, 'The schedule could not be saved.', 500);
+}
+
+$q->bind_param('sssssssis', $subject, $course, $section, $date, $start, $end, $room, $faculty_id, $f['full_name']);
+if (!$q->execute()) {
+    error_log('Schedule insert failed: ' . $q->error);
+    response(false, 'The schedule could not be saved.', 500);
+}
+
+response(true, 'Schedule created successfully.', 200, ['id' => $q->insert_id]);

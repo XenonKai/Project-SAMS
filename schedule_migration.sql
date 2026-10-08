@@ -1,6 +1,3 @@
--- Run this migration if you prefer creating the schedule table manually.
--- The PHP schedule endpoints also create it automatically when needed.
-
 CREATE TABLE IF NOT EXISTS schedules (
     id INT AUTO_INCREMENT PRIMARY KEY,
     subject VARCHAR(100) NOT NULL,

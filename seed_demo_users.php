@@ -1,8 +1,4 @@
 <?php
-/**
- * Create or repair the presentation/demo accounts.
- * Run once from the project directory with: php seed_demo_users.php
- */
 if (PHP_SAPI !== 'cli') {
     http_response_code(403);
     exit("Run this file from the command line.\n");
